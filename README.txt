@@ -1,27 +1,25 @@
-DISCOVER — FIXED ALL-IN-ONE EDITION
+DISCOVER — UPGRADED EDITION
 
-This package replaces the broken previous package. It includes a non-empty index.html, style.css and script.js.
+Drop-in replacement: upload index.html, style.css and script.js to your GitHub repo
+(Code > Add file > Upload files), commit to main, then hard-refresh (Ctrl+Shift+R).
+Existing Travel Book entries and tasks saved in visitors' browsers are migrated automatically.
 
-Features:
-- Animated premium dark travel design and section transitions
-- Interactive 3D globe (Globe.gl) with clickable country polygons and drag/zoom
-- Country selector with search and 40+ country choices
-- Country photo covers, six destination cards and local food cards for 12 featured countries; general fallback cards for other countries
-- Six interface languages: English, French, Arabic, Spanish, German and Italian
-- Instagram-style Moments feed with photo upload/camera capture, captions, likes and save
-- Travel Book with four country tasks, personal photo, note and completed-country collection
-- Responsive mobile layout
+What's new
+- All 195 countries now work (the 13 curated ones keep your hand-written content; the rest are
+  filled live from Wikipedia + REST Countries: description, photos, places, local dishes, facts).
+- Country names, descriptions and place text follow the chosen language (EN/FR/AR/ES/DE/IT).
+- Facts strip: capital, region, population, area, languages, currency.
+- Globe: fixed country matching (ISO codes), highlight on select/hover, name tooltips,
+  visited countries glow mint, smart zoom per country, auto-rotate pauses while you drag.
+- Search with suggestions + keyboard support, "Surprise me", wishlist, share link (?c=JP).
+- Broken Unsplash photos self-heal via Wikipedia, then fall back to a gradient.
+- Place cards open in Google Maps.
+- Moments: working Save and Like, delete your posts, filters, full-screen photo view, stories jump to countries.
+- Travel Book: photos auto-compressed (storage lasts much longer), notes shown, remove pages, confetti.
+- Camera-only upload bug fixed (you can now pick from gallery or camera).
+- Accessibility, scroll progress, active nav link, back-to-top, proper Arabic fonts/RTL, reduced-motion.
 
-HOW TO INSTALL:
-1. Extract this ZIP.
-2. Open the DISCOVER-FIXED folder.
-3. In your GitHub repository choose Code > Add file > Upload files.
-4. Upload index.html, style.css and script.js (not the ZIP).
-5. Commit to main, wait for GitHub Pages deployment.
-6. Hard-refresh the website with Ctrl+Shift+R.
-
-IMPORTANT:
-- 3D globe, Google Fonts and Unsplash photos require an internet connection.
-- User posts and Travel Book entries are saved only in this browser using localStorage. They are not public/shared between visitors.
-- Globe map data is loaded from a public GeoJSON URL. If blocked, the country dropdown still works.
-- The country guide contains detailed curated content for 12 countries; other listed countries use general destination suggestions.
+Notes
+- Curated place descriptions for the 13 featured countries are English only.
+- Posts and Travel Book are stored per browser (localStorage), not shared between visitors.
+- Needs internet for globe, fonts, Wikipedia data and Unsplash photos.
