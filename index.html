@@ -15,7 +15,7 @@
   <header class="navbar">
     <a class="logo" href="#home">DISCOVER<span>.</span></a>
     <nav>
-      <a href="#home">Home</a><a href="#destinations">Explore</a><a href="#moments">Moments</a>
+      <a href="#home">Home</a><a href="#destinations">Explore</a><a href="#moments">Moments</a><a href="#travelBook">Travel book</a>
       <a href="#culture">Culture</a><a href="#food">Food</a><a href="#favorites">Saved</a>
     </nav>
     <div class="header-tools"><label class="language-wrap" aria-label="Language">🌐 <select id="languageSelect"><option value="en">English</option><option value="fr">Français</option><option value="ar">العربية</option><option value="es">Español</option><option value="de">Deutsch</option><option value="it">Italiano</option></select></label><label class="country-wrap"><span>🌍</span><select id="countrySelect" aria-label="Choose country"></select></label></div>
@@ -90,6 +90,40 @@
     <section class="section favorites-section" id="favorites">
       <p class="eyebrow">YOUR PERSONAL COLLECTION</p><h2>Places worth <em>keeping.</em> ♥</h2>
       <div class="destination-grid" id="favoritesGrid"></div>
+    </section>
+
+    <section class="travel-book-section" id="travelBook">
+      <div class="section travel-book-wrap">
+        <div class="book-heading">
+          <div><p class="eyebrow">YOUR JOURNEY, BEAUTIFULLY KEPT</p><h2>My travel <em>book.</em> 📖</h2><p class="subheading">Complete your country checklist, add your own photo, and keep a page for every adventure.</p></div>
+          <div class="book-count"><strong id="bookCount">0</strong><span>countries<br>completed</span></div>
+        </div>
+        <div class="book-layout">
+          <div class="book-checklist">
+            <label class="composer-label" for="bookCountry">Choose the country for this page</label>
+            <select id="bookCountry" class="book-country-select"></select>
+            <div class="book-progress-head"><span id="bookProgressText">Your country checklist</span><strong id="bookProgressPercent">0%</strong></div>
+            <div class="progress-track"><span id="bookProgressBar"></span></div>
+            <div id="bookTasks" class="book-tasks"></div>
+            <label class="composer-label" for="bookMemory">A note from this journey</label>
+            <textarea id="bookMemory" class="book-memory" maxlength="240" placeholder="What made this country special to you?"></textarea>
+            <label class="book-photo-button" for="bookPhotoInput"><span>＋</span><strong id="bookPhotoLabel">Add your travel photo</strong><small>Choose a photo from your device</small></label>
+            <input id="bookPhotoInput" type="file" accept="image/*" capture="environment" hidden>
+            <button id="completeBookPage" class="main-button book-complete-button" type="button" disabled>Complete this country page ↗</button>
+            <p class="book-small-note">This is a personal travel journal. Tick the activities you have really completed. Your pages are saved in this browser.</p>
+          </div>
+          <div class="book-preview-wrap">
+            <div class="book-page" id="bookPagePreview">
+              <div class="book-page-top"><span>DISCOVER · TRAVEL JOURNAL</span><span>✦ 001 ✦</span></div>
+              <div class="book-page-photo" id="bookPagePhoto"><span>YOUR PHOTO<br>GOES HERE</span></div>
+              <div class="book-page-copy"><p class="book-page-kicker">A COUNTRY TO REMEMBER</p><h3 id="bookPageCountry">🇹🇳 Tunisia</h3><p id="bookPageMemory">Every journey begins with curiosity. Add your photo and a note to make this page yours.</p></div>
+              <div class="book-page-stamp">MY<br>JOURNEY</div>
+              <div class="book-page-footer"><span>COLLECT MOMENTS, NOT JUST MILES</span><span>DISCOVER.</span></div>
+            </div>
+            <div class="book-completed" id="completedBookPages"></div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="planner-section" id="planner">
