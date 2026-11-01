@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0d12">
+  <title>DISCOVER — Feel the world</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-glow"></div>
+  <header class="navbar">
+    <a class="logo" href="#home">DISCOVER<span>.</span></a>
+    <nav>
+      <a href="#home">Home</a><a href="#destinations">Explore</a><a href="#moments">Moments</a>
+      <a href="#culture">Culture</a><a href="#food">Food</a><a href="#favorites">Saved</a>
+    </nav>
+    <div class="header-tools"><label class="language-wrap" aria-label="Language">🌐 <select id="languageSelect"><option value="en">English</option><option value="fr">Français</option><option value="ar">العربية</option><option value="es">Español</option><option value="de">Deutsch</option><option value="it">Italiano</option></select></label><label class="country-wrap"><span>🌍</span><select id="countrySelect" aria-label="Choose country"></select></label></div>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-content">
+        <p class="eyebrow reveal">THE WORLD IS WAITING</p>
+        <h1 class="reveal">Don't just visit.<br><em>Feel the world.</em></h1>
+        <p class="hero-description reveal">Find the places, flavours, traditions and little moments that make every country unforgettable.</p>
+        <a href="#destinations" class="main-button reveal">Start your journey <span>↗</span></a>
+        <div class="hero-meta reveal"><span>✦ 12 countries to explore</span><span>✦ Endless stories</span></div>
+      </div>
+      <div class="hero-stamp"><span>GO</span><small>BEYOND<br>THE MAP</small></div>
+      <div class="hero-bottom"><span>01 / EXPLORE EVERYWHERE</span><span>SCROLL TO DISCOVER ↓</span></div>
+    </section>
+
+    <section class="world-section" id="world">
+      <div class="section world-layout">
+        <div class="world-copy"><p class="eyebrow" data-i18n="worldEyebrow">YOUR WORLD, YOUR JOURNEY</p><h2 data-i18n="worldTitle">Choose a country on the <em>globe.</em></h2><p class="subheading" data-i18n="worldDesc">Drag to spin the Earth, zoom in, then select a country to explore its places, food and culture.</p><div class="world-hint">✦ <span data-i18n="worldHint">You can also choose a country from the menu above.</span></div><div class="selected-country" id="selectedCountry">🇹🇳 Tunisia</div></div>
+        <div class="globe-shell"><div id="globeViz" aria-label="Interactive 3D globe. Select a country."></div><div class="globe-caption">✦ EXPLORE THE WORLD ✦</div></div>
+      </div>
+    </section>
+
+    <section class="section" id="destinations">
+      <div class="section-heading">
+        <div><p class="eyebrow">PICK A PLACE, FIND A STORY</p><h2>Explore <em id="countryTitle">Tunisia</em></h2></div>
+        <p id="countryLabel" class="muted">🇹🇳 Exploring Tunisia</p>
+      </div>
+      <div class="search-row"><input id="searchInput" type="search" placeholder="Search cities, landmarks, experiences..."><span class="search-icon">⌕</span></div>
+      <div class="filters">
+        <button class="filter active" data-filter="All">Everything</button>
+        <button class="filter" data-filter="History">History</button>
+        <button class="filter" data-filter="Nature">Nature</button>
+        <button class="filter" data-filter="Beach">Coast</button>
+        <button class="filter" data-filter="Culture">Culture</button>
+      </div>
+      <div class="destination-grid" id="destinationGrid"></div>
+    </section>
+
+    <section class="moments-section" id="moments">
+      <div class="section">
+        <div class="section-heading">
+          <div><p class="eyebrow">A LITTLE INSPIRATION FROM EVERYWHERE</p><h2>Travel <em>moments.</em></h2></div>
+          <button class="add-post-button" id="openPostComposer" type="button"><span>＋</span> Add photo</button>
+        </div>
+        <div class="stories" id="stories"></div>
+        <div class="feed-grid" id="feedGrid"></div>
+      </div>
+    </section>
+
+    <section class="culture-section" id="culture">
+      <div class="section">
+        <p class="eyebrow">THE HEART OF EVERY COUNTRY</p><h2>Culture is the <em>real journey.</em></h2>
+        <p class="subheading">Discover the customs, art and stories that bring a place to life.</p>
+        <div class="culture-grid">
+          <article class="culture-card"><span>🎭</span><h3>Traditions</h3><p>Local customs, celebrations and everyday life.</p></article>
+          <article class="culture-card"><span>🏛️</span><h3>Heritage</h3><p>Ancient stories, architecture and historic places.</p></article>
+          <article class="culture-card"><span>🎨</span><h3>Art & craft</h3><p>Handmade objects, design, music and creativity.</p></article>
+          <article class="culture-card"><span>🗣️</span><h3>Language</h3><p>Learn a few local words and friendly expressions.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="food">
+      <p class="eyebrow">A COUNTRY ON A PLATE</p><h2>Local food & <em>flavours.</em> 🍽️</h2>
+      <p class="subheading">Taste is one of the best ways to understand a culture.</p>
+      <div class="food-grid" id="foodGrid"></div>
+    </section>
+
+    <section class="section favorites-section" id="favorites">
+      <p class="eyebrow">YOUR PERSONAL COLLECTION</p><h2>Places worth <em>keeping.</em> ♥</h2>
+      <div class="destination-grid" id="favoritesGrid"></div>
+    </section>
+
+    <section class="planner-section" id="planner">
+      <div class="planner-box">
+        <p class="eyebrow">MAKE IT YOUR OWN</p><h2>Your next <em>adventure.</em> ✈️</h2>
+        <p class="muted">Build a simple travel idea based on the time and experiences you love.</p>
+        <label for="tripDays">How many days?</label>
+        <select id="tripDays"><option value="3">3 days</option><option value="5">5 days</option><option value="7">7 days</option><option value="10">10 days</option></select>
+        <label for="tripStyle">Your travel mood</label>
+        <select id="tripStyle"><option value="All">A bit of everything</option><option value="History">History and culture</option><option value="Nature">Nature and adventure</option><option value="Beach">Coast and relaxation</option></select>
+        <button class="main-button" id="generateTrip">Create my itinerary ↗</button>
+        <div id="tripResult"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="post-modal" id="postModal" aria-hidden="true">
+    <div class="post-dialog" role="dialog" aria-modal="true" aria-labelledby="postDialogTitle">
+      <button class="modal-close" id="closePostComposer" type="button" aria-label="Close">×</button>
+      <p class="eyebrow">SHARE A TRAVEL MOMENT</p>
+      <h2 id="postDialogTitle">Create a <em>post.</em></h2>
+      <label class="photo-picker" for="postPhotoInput"><span class="photo-plus">＋</span><strong id="photoPickerText">Choose or take a photo</strong><small>JPG, PNG or WEBP · up to 8 MB</small><img id="photoPreview" alt="Photo preview" hidden></label>
+      <input id="postPhotoInput" type="file" accept="image/*" capture="environment" hidden>
+      <label class="composer-label" for="postCaption">Caption</label>
+      <textarea id="postCaption" maxlength="220" placeholder="Write a little story about this place..."></textarea>
+      <label class="composer-label" for="postLocation">Location</label>
+      <input id="postLocation" type="text" maxlength="70" placeholder="e.g. Sidi Bou Said, Tunisia">
+      <button class="main-button publish-button" id="publishPost" type="button" disabled>＋ Share post</button>
+      <p class="composer-note">Your post is saved in this browser on this device. It is not uploaded to a public account.</p>
+    </div>
+  </div>
+  <footer><a class="logo" href="#home">DISCOVER<span>.</span></a><p>Travel curious. Stay open. Discover more.</p><small>© 2026 DISCOVER — Made for curious minds.</small></footer>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="https://unpkg.com/topojson-client@3"></script>
+  <script src="https://unpkg.com/globe.gl"></script>
+  <script src="script.js"></script>
+</body>
+</html>
