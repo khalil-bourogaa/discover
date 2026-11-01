@@ -1,174 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0b0d12">
-  <title>DISCOVER — Feel the world</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080d16">
+  <title>DISCOVER — See the world differently</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/globe.gl@2.37.0/dist/globe.gl.min.js"></script>
 </head>
 <body>
-  <div class="page-glow"></div>
-  <header class="navbar">
-    <a class="logo" href="#home">DISCOVER<span>.</span></a>
-    <nav>
-      <a href="#home">Home</a><a href="#destinations">Explore</a><a href="#moments">Moments</a><a href="#travelBook">Travel book</a>
-      <a href="#culture">Culture</a><a href="#food">Food</a><a href="#favorites">Saved</a>
+  <div class="ambient"></div><div class="noise"></div>
+  <header class="topbar">
+    <a class="brand" href="#home"><span class="brand-mark">D</span><span>DISCOVER<span class="brand-dot">.</span><small>THE WORLD IS YOURS</small></span></a>
+    <nav class="main-nav">
+      <a href="#home" data-i18n="navHome">Home</a><a href="#explore" data-i18n="navExplore">Explore</a><a href="#moments" data-i18n="navMoments">Moments</a><a href="#book" data-i18n="navBook">Travel book</a>
     </nav>
-    <div class="header-tools"><label class="language-wrap" aria-label="Language">🌐 <select id="languageSelect"><option value="en">English</option><option value="fr">Français</option><option value="ar">العربية</option><option value="es">Español</option><option value="de">Deutsch</option><option value="it">Italiano</option></select></label><label class="country-wrap"><span>🌍</span><select id="countrySelect" aria-label="Choose country"></select></label></div>
+    <div class="nav-actions"><select id="languageSelect" aria-label="Language"><option value="en">EN</option><option value="fr">FR</option><option value="ar">عربي</option><option value="es">ES</option><option value="de">DE</option><option value="it">IT</option></select><button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button></div>
   </header>
 
   <main>
-    <section class="hero" id="home">
-      <div class="hero-content">
-        <p class="eyebrow reveal">THE WORLD IS WAITING</p>
-        <h1 class="reveal">Don't just visit.<br><em>Feel the world.</em></h1>
-        <p class="hero-description reveal">Find the places, flavours, traditions and little moments that make every country unforgettable.</p>
-        <a href="#destinations" class="main-button reveal">Start your journey <span>↗</span></a>
-        <div class="hero-meta reveal"><span>✦ 12 countries to explore</span><span>✦ Endless stories</span></div>
+    <section class="hero section" id="home">
+      <div class="hero-copy reveal"><div class="overline"><span></span><span data-i18n="heroEyebrow">YOUR NEXT CHAPTER STARTS HERE</span></div>
+        <h1 data-i18n="heroTitle">The world is<br><em>waiting for you.</em></h1>
+        <p data-i18n="heroText">Find places that move you. Discover cultures that inspire you. Keep every journey close.</p>
+        <div class="hero-buttons"><a class="btn btn-primary" href="#explore" data-i18n="exploreWorld">Explore the world <b>↗</b></a><a class="text-link" href="#book" data-i18n="openBook">Open my travel book <span>→</span></a></div>
+        <div class="hero-stats"><div><strong>195</strong><small data-i18n="countries">COUNTRIES</small></div><i></i><div><strong>∞</strong><small data-i18n="stories">STORIES TO FIND</small></div><i></i><div><strong>01</strong><small data-i18n="planet">ONE PLANET</small></div></div>
       </div>
-      <div class="hero-stamp"><span>GO</span><small>BEYOND<br>THE MAP</small></div>
-      <div class="hero-bottom"><span>01 / EXPLORE EVERYWHERE</span><span>SCROLL TO DISCOVER ↓</span></div>
+      <div class="hero-art"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="hero-photo"></div><div class="hero-photo-label"><span>01 / 195</span><b>Somewhere, unforgettable.</b></div><div class="floating-chip">✦ &nbsp; GO BEYOND THE ORDINARY</div></div>
+      <a href="#world" class="scroll-cue"><span></span><small data-i18n="scrollExplore">SCROLL TO EXPLORE</small></a>
     </section>
 
-    <section class="world-section" id="world">
-      <div class="section world-layout">
-        <div class="world-copy"><p class="eyebrow" data-i18n="worldEyebrow">YOUR WORLD, YOUR JOURNEY</p><h2 data-i18n="worldTitle">Choose a country on the <em>globe.</em></h2><p class="subheading" data-i18n="worldDesc">Drag to spin the Earth, zoom in, then select a country to explore its places, food and culture.</p><div class="world-hint">✦ <span data-i18n="worldHint">You can also choose a country from the menu above.</span></div><div class="selected-country" id="selectedCountry">🇹🇳 Tunisia</div></div>
-        <div class="globe-shell"><div id="globeViz" aria-label="Interactive 3D globe. Select a country."></div><div class="globe-caption">✦ EXPLORE THE WORLD ✦</div></div>
+    <section class="world-section section" id="world">
+      <div class="section-heading reveal"><div><div class="overline"><span></span><span data-i18n="worldEyebrow">A PLANET FULL OF POSSIBILITIES</span></div><h2 data-i18n="worldTitle">Choose your <em>next world.</em></h2></div><p data-i18n="worldText">Spin the globe, pick a country, and let curiosity lead the way.</p></div>
+      <div class="world-layout">
+        <div class="globe-panel"><div class="globe-top"><span class="live-dot"></span><span data-i18n="liveGlobe">INTERACTIVE WORLD GLOBE</span><span class="globe-hint">DRAG · ZOOM · SELECT</span></div><div id="globeViz"><div class="globe-loading">Loading the Earth…</div></div><div class="globe-bottom"><span>🌐 <span data-i18n="earthView">EARTH VIEW</span></span><span id="globeStatus">Ready to explore</span></div></div>
+        <aside class="country-panel"><div class="panel-kicker" data-i18n="findCountry">FIND A COUNTRY</div><label class="searchbox"><span>⌕</span><input id="countrySearch" placeholder="Search a country…" autocomplete="off"></label><div class="country-select-wrap"><label for="countrySelect" data-i18n="selectCountry">SELECT COUNTRY</label><select id="countrySelect"></select></div><div id="selectedCountry" class="selected-country"></div><div class="quick-countries"><span data-i18n="popular">POPULAR</span><div id="popularCountries"></div></div></aside>
       </div>
     </section>
 
-    <section class="section" id="destinations">
-      <div class="section-heading">
-        <div><p class="eyebrow">PICK A PLACE, FIND A STORY</p><h2>Explore <em id="countryTitle">Tunisia</em></h2></div>
-        <p id="countryLabel" class="muted">🇹🇳 Exploring Tunisia</p>
-      </div>
-      <div class="search-row"><input id="searchInput" type="search" placeholder="Search cities, landmarks, experiences..."><span class="search-icon">⌕</span></div>
-      <div class="filters">
-        <button class="filter active" data-filter="All">Everything</button>
-        <button class="filter" data-filter="History">History</button>
-        <button class="filter" data-filter="Nature">Nature</button>
-        <button class="filter" data-filter="Beach">Coast</button>
-        <button class="filter" data-filter="Culture">Culture</button>
-      </div>
+    <section class="explore-section section" id="explore">
+      <div class="section-heading reveal"><div><div class="overline"><span></span><span data-i18n="discoverMore">GO DEEPER</span></div><h2><span data-i18n="exploreTitle">Explore every</span> <em data-i18n="exploreEm">corner.</em></h2></div><p data-i18n="exploreText">From iconic landmarks to quiet hidden places, find the details that make each destination unique.</p></div>
+      <div class="country-banner" id="countryBanner"><div class="banner-copy"><span id="bannerEyebrow">COUNTRY GUIDE</span><h3 id="bannerTitle">Tunisia</h3><p id="bannerDescription">A meeting place of Mediterranean blue, desert gold and ancient stories.</p></div><div class="banner-index">DISCOVER / <span id="bannerNumber">001</span></div></div>
+      <div class="subheading"><div><span class="panel-kicker" data-i18n="regionsCities">REGIONS & CITIES</span><h3 data-i18n="placesWorth">Places worth the journey</h3></div><span class="subtle" id="placeCount">06 PLACES</span></div>
       <div class="destination-grid" id="destinationGrid"></div>
+      <div class="subheading food-heading"><div><span class="panel-kicker" data-i18n="tasteCulture">TASTE THE CULTURE</span><h3 data-i18n="localFlavours">Local flavours</h3></div></div><div class="food-grid" id="foodGrid"></div>
     </section>
 
-    <section class="section country-gallery-section" id="countryGallery">
-      <div class="country-cover" id="countryCover">
-        <div class="country-cover-shade"></div>
-        <div class="country-cover-copy"><p class="eyebrow">A CLOSER LOOK</p><h2 id="countryCoverTitle">Discover Tunisia</h2><p id="countryCoverSubtitle">Explore the regions, cities and landscapes.</p></div>
-        <span class="country-cover-tag" id="countryCoverTag">🇹🇳 TUNISIA</span>
-      </div>
-      <div class="section-heading country-gallery-heading"><div><p class="eyebrow">PLACES THROUGH PICTURES</p><h2>Explore its <em>regions.</em></h2></div><p class="muted">Select a photo to learn more about each destination.</p></div>
-      <div class="region-gallery" id="regionGallery"></div>
+    <section class="moments-section section" id="moments">
+      <div class="section-heading reveal"><div><div class="overline"><span></span><span data-i18n="community">TRAVEL IS BETTER SHARED</span></div><h2 data-i18n="momentsTitle">Your world, <em>in moments.</em></h2></div><div class="moments-intro"><p data-i18n="momentsText">A little window into journeys, places and memories from the Discover community.</p><button class="btn btn-primary" id="addPostBtn"><span class="plus">＋</span><span data-i18n="addPhoto">Add a photo</span></button><input type="file" id="postPhotoInput" accept="image/*" capture="environment" hidden></div></div>
+      <div class="stories-row" id="storiesRow"></div><div class="feed-grid" id="feedGrid"></div>
     </section>
 
-    <section class="moments-section" id="moments">
-      <div class="section">
-        <div class="section-heading">
-          <div><p class="eyebrow">A LITTLE INSPIRATION FROM EVERYWHERE</p><h2>Travel <em>moments.</em></h2></div>
-          <button class="add-post-button" id="openPostComposer" type="button"><span>＋</span> Add photo</button>
-        </div>
-        <div class="stories" id="stories"></div>
-        <div class="feed-grid" id="feedGrid"></div>
-      </div>
-    </section>
-
-    <section class="culture-section" id="culture">
-      <div class="section">
-        <p class="eyebrow">THE HEART OF EVERY COUNTRY</p><h2>Culture is the <em>real journey.</em></h2>
-        <p class="subheading">Discover the customs, art and stories that bring a place to life.</p>
-        <div class="culture-grid">
-          <article class="culture-card"><span>🎭</span><h3>Traditions</h3><p>Local customs, celebrations and everyday life.</p></article>
-          <article class="culture-card"><span>🏛️</span><h3>Heritage</h3><p>Ancient stories, architecture and historic places.</p></article>
-          <article class="culture-card"><span>🎨</span><h3>Art & craft</h3><p>Handmade objects, design, music and creativity.</p></article>
-          <article class="culture-card"><span>🗣️</span><h3>Language</h3><p>Learn a few local words and friendly expressions.</p></article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="food">
-      <p class="eyebrow">A COUNTRY ON A PLATE</p><h2>Local food & <em>flavours.</em> 🍽️</h2>
-      <p class="subheading">Taste is one of the best ways to understand a culture.</p>
-      <div class="food-grid" id="foodGrid"></div>
-    </section>
-
-    <section class="section favorites-section" id="favorites">
-      <p class="eyebrow">YOUR PERSONAL COLLECTION</p><h2>Places worth <em>keeping.</em> ♥</h2>
-      <div class="destination-grid" id="favoritesGrid"></div>
-    </section>
-
-    <section class="travel-book-section" id="travelBook">
-      <div class="section travel-book-wrap">
-        <div class="book-heading">
-          <div><p class="eyebrow">YOUR JOURNEY, BEAUTIFULLY KEPT</p><h2>My travel <em>book.</em> 📖</h2><p class="subheading">Complete your country checklist, add your own photo, and keep a page for every adventure.</p></div>
-          <div class="book-count"><strong id="bookCount">0</strong><span>countries<br>completed</span></div>
-        </div>
-        <div class="book-layout">
-          <div class="book-checklist">
-            <label class="composer-label" for="bookCountry">Choose the country for this page</label>
-            <select id="bookCountry" class="book-country-select"></select>
-            <div class="book-progress-head"><span id="bookProgressText">Your country checklist</span><strong id="bookProgressPercent">0%</strong></div>
-            <div class="progress-track"><span id="bookProgressBar"></span></div>
-            <div id="bookTasks" class="book-tasks"></div>
-            <label class="composer-label" for="bookMemory">A note from this journey</label>
-            <textarea id="bookMemory" class="book-memory" maxlength="240" placeholder="What made this country special to you?"></textarea>
-            <label class="book-photo-button" for="bookPhotoInput"><span>＋</span><strong id="bookPhotoLabel">Add your travel photo</strong><small>Choose a photo from your device</small></label>
-            <input id="bookPhotoInput" type="file" accept="image/*" capture="environment" hidden>
-            <button id="completeBookPage" class="main-button book-complete-button" type="button" disabled>Complete this country page ↗</button>
-            <p class="book-small-note">This is a personal travel journal. Tick the activities you have really completed. Your pages are saved in this browser.</p>
-          </div>
-          <div class="book-preview-wrap">
-            <div class="book-page" id="bookPagePreview">
-              <div class="book-page-top"><span>DISCOVER · TRAVEL JOURNAL</span><span>✦ 001 ✦</span></div>
-              <div class="book-page-photo" id="bookPagePhoto"><span>YOUR PHOTO<br>GOES HERE</span></div>
-              <div class="book-page-copy"><p class="book-page-kicker">A COUNTRY TO REMEMBER</p><h3 id="bookPageCountry">🇹🇳 Tunisia</h3><p id="bookPageMemory">Every journey begins with curiosity. Add your photo and a note to make this page yours.</p></div>
-              <div class="book-page-stamp">MY<br>JOURNEY</div>
-              <div class="book-page-footer"><span>COLLECT MOMENTS, NOT JUST MILES</span><span>DISCOVER.</span></div>
-            </div>
-            <div class="book-completed" id="completedBookPages"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="planner-section" id="planner">
-      <div class="planner-box">
-        <p class="eyebrow">MAKE IT YOUR OWN</p><h2>Your next <em>adventure.</em> ✈️</h2>
-        <p class="muted">Build a simple travel idea based on the time and experiences you love.</p>
-        <label for="tripDays">How many days?</label>
-        <select id="tripDays"><option value="3">3 days</option><option value="5">5 days</option><option value="7">7 days</option><option value="10">10 days</option></select>
-        <label for="tripStyle">Your travel mood</label>
-        <select id="tripStyle"><option value="All">A bit of everything</option><option value="History">History and culture</option><option value="Nature">Nature and adventure</option><option value="Beach">Coast and relaxation</option></select>
-        <button class="main-button" id="generateTrip">Create my itinerary ↗</button>
-        <div id="tripResult"></div>
-      </div>
+    <section class="book-section section" id="book">
+      <div class="book-intro"><div class="overline"><span></span><span data-i18n="personalArchive">YOUR PERSONAL ARCHIVE</span></div><h2 data-i18n="bookTitle">A world of memories,<br><em>bound in one book.</em></h2><p data-i18n="bookText">Complete a country journey, add your own photograph, and keep a page in your personal travel book.</p><div class="book-progress"><div class="progress-label"><span data-i18n="journeyProgress">YOUR JOURNEY</span><b id="progressText">0 / 195 COUNTRIES</b></div><div class="progress-track"><span id="progressBar"></span></div></div></div>
+      <div class="book-display"><div class="book-cover"><div class="book-cover-top">THE COLLECTOR'S EDITION</div><div class="book-emblem">✦</div><div class="book-cover-title">MY<br><i>TRAVEL</i><br>BOOK</div><div class="book-cover-bottom">PLACES · PEOPLE · MEMORIES</div></div><div class="book-pages"><div class="page-corner"></div><span class="panel-kicker" data-i18n="collectedPages">COLLECTED PAGES</span><div id="bookEntries" class="book-entries"></div></div></div>
+      <div class="challenge-area"><div class="challenge-head"><div><span class="panel-kicker" data-i18n="countryChallenge">COUNTRY CHALLENGE</span><h3 data-i18n="completeJourney">Complete a journey</h3></div><span class="challenge-step" id="challengeCountryLabel">TUNISIA · 01</span></div><div class="challenge-card"><div class="challenge-country-image" id="challengeImage"></div><div class="challenge-content"><div class="challenge-title-row"><div><span class="panel-kicker" data-i18n="yourChecklist">YOUR CHECKLIST</span><h3 id="challengeCountryName">Tunisia</h3></div><span class="challenge-percent" id="challengePercent">0%</span></div><div class="challenge-tasks" id="challengeTasks"></div><div class="challenge-photo-row"><label class="photo-upload"><span>＋</span><span data-i18n="addTravelPhoto">Add your travel photo</span><input type="file" id="memoryPhoto" accept="image/*" hidden></label><span class="photo-name" id="memoryPhotoName">No photo selected</span></div><textarea id="memoryNote" rows="2" placeholder="Write a little memory from this country…"></textarea><button class="btn btn-primary complete-btn" id="completeCountryBtn" disabled data-i18n="completeCountry">Complete country & add to book</button><p class="challenge-note" data-i18n="challengeNote">Tick all four experiences and add a photo to complete your page.</p></div></div></div>
     </section>
   </main>
 
-  <div class="post-modal" id="postModal" aria-hidden="true">
-    <div class="post-dialog" role="dialog" aria-modal="true" aria-labelledby="postDialogTitle">
-      <button class="modal-close" id="closePostComposer" type="button" aria-label="Close">×</button>
-      <p class="eyebrow">SHARE A TRAVEL MOMENT</p>
-      <h2 id="postDialogTitle">Create a <em>post.</em></h2>
-      <label class="photo-picker" for="postPhotoInput"><span class="photo-plus">＋</span><strong id="photoPickerText">Choose or take a photo</strong><small>JPG, PNG or WEBP · up to 8 MB</small><img id="photoPreview" alt="Photo preview" hidden></label>
-      <input id="postPhotoInput" type="file" accept="image/*" capture="environment" hidden>
-      <label class="composer-label" for="postCaption">Caption</label>
-      <textarea id="postCaption" maxlength="220" placeholder="Write a little story about this place..."></textarea>
-      <label class="composer-label" for="postLocation">Location</label>
-      <input id="postLocation" type="text" maxlength="70" placeholder="e.g. Sidi Bou Said, Tunisia">
-      <button class="main-button publish-button" id="publishPost" type="button" disabled>＋ Share post</button>
-      <p class="composer-note">Your post is saved in this browser on this device. It is not uploaded to a public account.</p>
-    </div>
-  </div>
-  <footer><a class="logo" href="#home">DISCOVER<span>.</span></a><p>Travel curious. Stay open. Discover more.</p><small>© 2026 DISCOVER — Made for curious minds.</small></footer>
+  <footer><a class="brand" href="#home"><span class="brand-mark">D</span><span>DISCOVER<span class="brand-dot">.</span><small>THE WORLD IS YOURS</small></span></a><span>MADE FOR THE CURIOUS <b>✦</b> 2026</span><a href="#home">BACK TO TOP ↑</a></footer>
   <div class="toast" id="toast" role="status"></div>
-  <script src="https://unpkg.com/topojson-client@3"></script>
-  <script src="https://unpkg.com/globe.gl"></script>
+  <div class="modal" id="postModal" aria-hidden="true"><div class="modal-backdrop" data-close="modal"></div><div class="modal-card"><button class="modal-close" data-close="modal">×</button><span class="panel-kicker">SHARE A MOMENT</span><h3>Post your journey.</h3><img id="postPreview" alt="Photo preview"><input id="postCaption" placeholder="Write a caption…"><input id="postLocation" placeholder="Where was this?"><button class="btn btn-primary" id="publishPostBtn">Publish moment ↗</button></div></div>
   <script src="script.js"></script>
-</body>
-</html>
+</body></html>

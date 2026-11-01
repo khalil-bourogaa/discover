@@ -1,24 +1,27 @@
-# DISCOVER — All-in-One Edition
+DISCOVER — FIXED ALL-IN-ONE EDITION
 
-Complete website package:
-- Interactive 3D globe and country selection
-- Country cover photo and regional destination photo gallery
-- Country explorer, destination search and filters
+This package replaces the broken previous package. It includes a non-empty index.html, style.css and script.js.
+
+Features:
+- Animated premium dark travel design and section transitions
+- Interactive 3D globe (Globe.gl) with clickable country polygons and drag/zoom
+- Country selector with search and 40+ country choices
+- Country photo covers, six destination cards and local food cards for 12 featured countries; general fallback cards for other countries
 - Six interface languages: English, French, Arabic, Spanish, German and Italian
-- Instagram-style Moments feed with photo upload/camera capture, captions, likes and saves
-- Personal Travel Book with country challenges, photo and memory, and completed-country collection
-- Food and culture discovery, saved places and simple trip planner
+- Instagram-style Moments feed with photo upload/camera capture, captions, likes and save
+- Travel Book with four country tasks, personal photo, note and completed-country collection
+- Responsive mobile layout
 
-## Update GitHub Pages
+HOW TO INSTALL:
 1. Extract this ZIP.
-2. Open the `DISCOVER-All-In-One` folder.
-3. In your GitHub repository, choose Code → Add file → Upload files.
-4. Upload `index.html`, `style.css`, and `script.js` (the three files themselves, not this ZIP).
-5. Commit the changes to the `main` branch.
-6. Open Actions and wait for the Pages deployment to finish.
-7. Open the website and press Ctrl+Shift+R.
+2. Open the DISCOVER-FIXED folder.
+3. In your GitHub repository choose Code > Add file > Upload files.
+4. Upload index.html, style.css and script.js (not the ZIP).
+5. Commit to main, wait for GitHub Pages deployment.
+6. Hard-refresh the website with Ctrl+Shift+R.
 
-## Notes
-- The interactive globe and destination photos require an internet connection.
-- Regional gallery cards use the selected country's destination-photo data. Some countries have a smaller curated set of places than others.
-- Photo posts, likes, saved places and Travel Book pages are stored in the current browser. They are not shared between visitors or devices; public multi-user posting requires a backend/database.
+IMPORTANT:
+- 3D globe, Google Fonts and Unsplash photos require an internet connection.
+- User posts and Travel Book entries are saved only in this browser using localStorage. They are not public/shared between visitors.
+- Globe map data is loaded from a public GeoJSON URL. If blocked, the country dropdown still works.
+- The country guide contains detailed curated content for 12 countries; other listed countries use general destination suggestions.
