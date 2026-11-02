@@ -16,6 +16,19 @@
 </head>
 <body>
   <div id="loader" aria-hidden="true"><div class="loader-mark">D</div><small>DISCOVER</small><i></i></div>
+  <section id="cinematicIntro" role="group" tabindex="0" aria-label="Tap anywhere to enter Discover">
+    <video id="cinematicIntroVideo" autoplay muted playsinline webkit-playsinline preload="auto">
+      <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260815_032550_4c49689d-a215-41e0-bb76-8ef78f562429.mp4" type="video/mp4">
+    </video>
+    <div class="cinematic-intro-shade"></div>
+    <div class="cinematic-intro-brand">
+      <span class="cinematic-intro-kicker">A WORLD WAITING TO BE DISCOVERED</span>
+      <span class="cinematic-intro-title">DISCOVER<span>.</span></span>
+      <span class="cinematic-intro-caption">THE JOURNEY BEGINS HERE</span>
+    </div>
+    <button type="button" id="skipCinematicIntro">SKIP INTRO <span aria-hidden="true">↗</span></button>
+    <div class="cinematic-intro-progress"><i></i></div>
+  </section>
   <a class="skip-link" href="#explore" data-i18n="navExplore">Explore</a>
   <div id="scrollProgress"></div>
   <div id="bgPhoto" aria-hidden="true"></div><div class="bg-veil"></div><div class="ambient"></div><div class="noise"></div>
@@ -29,6 +42,11 @@
 
   <main>
     <section class="hero section" id="home">
+      <div class="hero-video-bg" aria-hidden="true">
+        <video autoplay muted loop playsinline webkit-playsinline preload="metadata" poster="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1600&q=85">
+          <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260815_032550_4c49689d-a215-41e0-bb76-8ef78f562429.mp4" type="video/mp4">
+        </video>
+      </div>
       <div class="hero-copy reveal"><div class="overline"><span></span><span data-i18n="heroEyebrow">YOUR NEXT CHAPTER STARTS HERE</span></div>
         <h1 data-i18n="heroTitle">The world is<br><em>waiting for you.</em></h1>
         <p data-i18n="heroText">Find places that move you. Discover cultures that inspire you. Keep every journey close.</p>
@@ -71,7 +89,7 @@
 
     <section class="moments-section section" id="moments">
       <div class="section-heading reveal"><div><div class="overline"><span></span><span data-i18n="community">TRAVEL IS BETTER SHARED</span></div><h2 data-i18n="momentsTitle">Your world, <em>in moments.</em></h2></div><div class="moments-intro"><p data-i18n="momentsText">A little window into journeys, places and memories from the Discover community.</p><button class="btn btn-primary" id="addPostBtn"><span class="plus">＋</span><span data-i18n="addPhoto">Add a photo</span></button><input type="file" id="postPhotoInput" accept="image/*" hidden></div></div>
-      <div class="stories-row" id="storiesRow"></div>
+      <div class="moments-community"><span class="moments-live-dot"></span> REAL JOURNEYS · SHARED BY TRAVELLERS</div><div class="stories-row" id="storiesRow"></div>
       <div class="feed-tools" id="feedTools"><button type="button" class="active" data-filter="latest" data-i18n="sortLatest">Latest</button><button type="button" data-filter="popular" data-i18n="sortPopular">Popular</button><button type="button" data-filter="saved" data-i18n="sortSaved">Saved</button><button type="button" data-filter="mine" data-i18n="sortMine">My posts</button></div>
       <div class="feed-grid" id="feedGrid"></div>
     </section>

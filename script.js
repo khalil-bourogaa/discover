@@ -280,14 +280,21 @@ async function getAttractions(code){
   })();
   memo.set(key,p);return p;
 }
-const FOOD_Q={en:"traditional dish cuisine",fr:"plat traditionnel cuisine",ar:"طبق تقليدي مطبخ",es:"plato tradicional cocina",de:"traditionelles Gericht Küche",it:"piatto tradizionale cucina"};
+const FOOD_Q={en:"traditional food dishes cuisine",fr:"cuisine plats traditionnels",ar:"أكلات تقليدية مطبخ",es:"comida platos tradicionales cocina",de:"traditionelle Gerichte Küche",it:"piatti tipici cucina"};
 async function getFood(code){
   const key="food:"+code+lang;if(memo.has(key))return memo.get(key);
   const p=(async()=>{
-    const l=lang,name=l==="en"?enBase(code).replace(/\s*\(.*\)/,""):nm(code),cn=norm(name);
-    const run=async L=>{const q=`${FOOD_Q[L]} ${L==="en"?enBase(code).replace(/\s*\(.*\)/,""):nm(code)}`;
-      const d=await jget(`https://${L}.wikipedia.org/w/api.php?format=json&origin=*&action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrlimit=12&gsrnamespace=0&prop=pageimages%7Cextracts&piprop=thumbnail&pithumbsize=500&exintro=1&explaintext=1&exsentences=2&exlimit=max`).catch(()=>null);
-      return Object.values(d?.query?.pages||{}).sort((a,b)=>a.index-b.index).filter(x=>x.extract&&x.extract.length>30&&!NOISE.test(x.title)&&norm(x.extract).includes(norm(L==="en"?enBase(code).replace(/\s*\(.*\)/,""):nm(code)).split(" ")[0])).map(x=>({emoji:"🍽️",title:x.title,text:short(x.extract,95),img:x.thumbnail?.source})).slice(0,4)};
+    const l=lang,name=l==="en"?enBase(code).replace(/\s*\(.*\)/,""):nm(code);
+    const run=async L=>{
+      const country=L==="en"?enBase(code).replace(/\s*\(.*\)/,""):nm(code);
+      const q=`${country} ${FOOD_Q[L]||FOOD_Q.en}`;
+      const d=await jget(`https://${L}.wikipedia.org/w/api.php?format=json&origin=*&action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrlimit=20&gsrnamespace=0&prop=pageimages%7Cextracts&piprop=thumbnail&pithumbsize=500&exintro=1&explaintext=1&exsentences=2&exlimit=max`).catch(()=>null);
+      const pages=Object.values(d?.query?.pages||{}).sort((a,b)=>a.index-b.index);
+      const foodWords=/food|dish|cuisine|culinary|recipe|ingredient|meal|traditional|specialt(y|ties)|gastronom|cooking|rice|noodle|soup|bread|stew|dessert/i;
+      return pages.filter(x=>x.extract&&x.extract.length>45&&!NOISE.test(x.title)&&foodWords.test(x.title+" "+x.extract))
+        .filter(x=>!/(restaurant|chef|food company|brand|festival|film|album)/i.test(x.title))
+        .slice(0,4).map(x=>({emoji:"🍽️",title:x.title,text:short(x.extract,110),img:x.thumbnail?.source}));
+    };
     let out=await run(l);if(out.length<2&&l!=="en")out=await run("en");return out;
   })();
   memo.set(key,p);return p;
@@ -383,9 +390,35 @@ async function renderContent(code,token){
   getVoyage(code).then(v=>{if(token!==renderToken)return;S.voyage=v;paintGuide()}).catch(()=>{});
   initGuide(code);
 }
+const COUNTRY_THEMES={
+  TN:{bg:"#101b25",panel:"#172936",panel2:"#203b48",gold:"#e0b879",mint:"#83cbb8",glow:"rgba(30,132,151,.20)"},
+  JP:{bg:"#17121d",panel:"#241b2b",panel2:"#342336",gold:"#e9a5a8",mint:"#a6cbb8",glow:"rgba(183,91,119,.20)"},
+  FR:{bg:"#111722",panel:"#1a2635",panel2:"#25364a",gold:"#c9a7e8",mint:"#91c8d4",glow:"rgba(87,115,183,.20)"},
+  IT:{bg:"#171710",panel:"#252419",panel2:"#343122",gold:"#d9b879",mint:"#9ac7a2",glow:"rgba(139,130,63,.20)"},
+  MA:{bg:"#1a1512",panel:"#2a201a",panel2:"#3b2a20",gold:"#e4ad70",mint:"#9dc5a4",glow:"rgba(170,93,48,.22)"},
+  ES:{bg:"#1b1512",panel:"#2a211b",panel2:"#3b2d22",gold:"#e3a36e",mint:"#a6c99d",glow:"rgba(184,91,44,.20)"},
+  TR:{bg:"#1b1218",panel:"#2a1b24",panel2:"#3b2631",gold:"#df9b9a",mint:"#9dc9bd",glow:"rgba(160,59,78,.22)"},
+  KR:{bg:"#101820",panel:"#1b2935",panel2:"#293b4b",gold:"#a9c6e8",mint:"#9bd1c4",glow:"rgba(83,139,176,.20)"},
+  TH:{bg:"#101b1b",panel:"#192c2a",panel2:"#24403b",gold:"#e2bd79",mint:"#9bd0b2",glow:"rgba(38,140,111,.20)"},
+  EG:{bg:"#1b1711",panel:"#2b2418",panel2:"#3c3020",gold:"#dfb66e",mint:"#a9c5a1",glow:"rgba(173,123,54,.22)"},
+  GR:{bg:"#101a22",panel:"#192a37",panel2:"#244052",gold:"#8fc6df",mint:"#9bd0bf",glow:"rgba(42,129,169,.22)"},
+  CH:{bg:"#171719",panel:"#24252a",panel2:"#34363d",gold:"#e2e0d8",mint:"#a8c9bd",glow:"rgba(163,174,184,.18)"},
+  BR:{bg:"#111b16",panel:"#1b2b20",panel2:"#29402d",gold:"#e0c36d",mint:"#9dd1a0",glow:"rgba(56,142,82,.22)"}
+};
+function applyCountryTheme(code){
+  let theme=COUNTRY_THEMES[code];
+  if(!theme){
+    let hash=0;for(const ch of code)hash=(hash*31+ch.charCodeAt(0))>>>0;
+    const hue=hash%360;
+    theme={bg:`hsl(${hue} 27% 9%)`,panel:`hsl(${hue} 27% 15%)`,panel2:`hsl(${hue} 29% 21%)`,gold:`hsl(${(hue+34)%360} 48% 70%)`,mint:`hsl(${(hue+155)%360} 35% 69%)`,glow:`hsla(${hue} 65% 42% / .18)`};
+  }
+  const root=document.documentElement;
+  Object.entries({"--bg":theme.bg,"--panel":theme.panel,"--panel2":theme.panel2,"--gold":theme.gold,"--mint":theme.mint,"--country-glow":theme.glow}).forEach(([k,v])=>root.style.setProperty(k,v));
+  document.body.dataset.country=code;
+}
 function setCountry(code,opts={}){
   if(!BY_CODE[code])return;
-  const changed=code!==S.code;S.code=code;const token=++renderToken;store.set("discoverLast",code);
+  const changed=code!==S.code;S.code=code;const token=++renderToken;store.set("discoverLast",code);applyCountryTheme(code);
   if(!opts.silent){try{history.replaceState(null,"","?c="+code+location.hash)}catch(e){}}
   if(changed)resetChallengeForm();
   $("#countrySelect").value=code;
@@ -605,6 +638,7 @@ function renderFeed(){
   $("#feedGrid").innerHTML=list.length?list.map(p=>postCard(p,st)).join(""):`<p class="feed-empty">${t("emptyFeed")}</p>`;
   $$("#feedTools button").forEach(b=>b.classList.toggle("active",b.dataset.filter===feedFilter));
   hydrateWiki($("#feedGrid"));
+  $$("#feedGrid img").forEach(img=>img.addEventListener("error",()=>{img.classList.add("photo-missing");img.removeAttribute("src");},{once:true}));
 }
 function postCard(p,st){
   const liked=!!st.liked[p.id],saved=!!st.saved[p.id],cm=st.comments[p.id]||[];
@@ -648,7 +682,18 @@ $$("[data-close=modal]").forEach(el=>el.addEventListener("click",closeModal));
 function compress(file,max=1200,q=.8){return new Promise((res,rej)=>{const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{let w=img.naturalWidth,h=img.naturalHeight;const k=Math.min(1,max/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);URL.revokeObjectURL(url);res(c.toDataURL("image/jpeg",q))};img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("img"))};img.src=url})}
 /* ================= DISCOVER v3 — challenge + 3D page-turning travel book ================= */
 function resetChallengeForm(){memoryData="";$("#memoryPhoto").value="";$("#memoryPhotoName").textContent=t("noPhoto");$("#memoryNote").value=""}
-function renderTasks(){const all=store.get("discoverTasks",{});taskState=all[S.code]||[false,false,false,false];$("#challengeTasks").innerHTML=[1,2,3,4].map((n,i)=>`<label class="task"><input type="checkbox" data-task="${i}" ${taskState[i]?"checked":""}>${esc(t("task"+n))}</label>`).join("");updateChallenge()}
+function renderTasks(){
+  const all=store.get("discoverTasks",{});taskState=all[S.code]||[false,false,false,false];
+  const cur=CURATED[S.code],places=cur?.places||[],foods=cur?.food||[];
+  let labels=[t("task1"),t("task2"),t("task3"),t("task4")];
+  if(lang==="en"){
+    if(places[0])labels[0]=`Visit or research ${places[0][0]}`;
+    if(foods[0])labels[1]=`Try or learn about ${foods[0][1]}`;
+    labels[2]=`Learn a useful phrase in ${nm(S.code)}`;
+    labels[3]=`Discover one local custom or cultural story`;
+  }
+  $("#challengeTasks").innerHTML=labels.map((label,i)=>`<label class="task"><input type="checkbox" data-task="${i}" ${taskState[i]?"checked":""}><span>${esc(label)}</span></label>`).join("");updateChallenge()
+}
 $("#challengeTasks").addEventListener("change",e=>{const i=e.target.closest("input[data-task]");if(!i)return;taskState[+i.dataset.task]=i.checked;const all=store.get("discoverTasks",{});all[S.code]=taskState;store.set("discoverTasks",all);updateChallenge()});
 function updateChallenge(){const done=taskState.filter(Boolean).length;$("#challengePercent").textContent=Math.round(done/4*100)+"%";$("#completeCountryBtn").disabled=done!==4||!memoryData}
 function updateProgress(){const n=getBook().length;$("#progressText").textContent=`${n} / ${COUNTRY_LIST.length} ${t("countries")}`;$("#progressBar").style.width=Math.min(100,n/COUNTRY_LIST.length*100)+"%"}
@@ -768,3 +813,21 @@ setCountry(S.code,{fly:false,silent:true});
 observeGlobe();startHero();countUp();
 function hideLoader(){const l=$("#loader");if(l){l.classList.add("done");setTimeout(()=>l.remove(),900)}}
 if(document.readyState==="complete")setTimeout(hideLoader,350);else{addEventListener("load",()=>setTimeout(hideLoader,350));setTimeout(hideLoader,2600)}
+
+
+/* cinematic intro film */
+(()=>{
+  const shell=document.getElementById("cinematicIntro"),film=document.getElementById("cinematicIntroVideo"),skip=document.getElementById("skipCinematicIntro");
+  if(!shell||!film||!skip)return;
+  document.body.classList.add("intro-playing");let closed=false,fallbackTimer;
+  const closeIntro=()=>{if(closed)return;closed=true;clearTimeout(fallbackTimer);shell.classList.add("is-leaving");document.body.classList.remove("intro-playing");try{film.pause()}catch(e){}setTimeout(()=>shell.remove(),1150)};
+  skip.addEventListener("click",e=>{e.stopPropagation();closeIntro()},{once:true});
+  shell.addEventListener("click",e=>{if(e.target.closest("a,button"))return;closeIntro()});
+  shell.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();closeIntro()}});
+  film.addEventListener("playing",()=>{shell.classList.add("is-playing");film.muted=true;film.defaultMuted=true;film.playsInline=true});
+  film.addEventListener("ended",closeIntro,{once:true});film.addEventListener("error",closeIntro,{once:true});
+  fallbackTimer=setTimeout(closeIntro,22000);
+  const start=()=>{film.muted=true;film.defaultMuted=true;film.playsInline=true;film.setAttribute("playsinline","");film.setAttribute("webkit-playsinline","");const p=film.play();if(p&&typeof p.catch==="function")p.catch(()=>closeIntro())};
+  if(film.readyState>=2)start();else film.addEventListener("canplay",start,{once:true});
+  if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)setTimeout(closeIntro,1200);
+})();
