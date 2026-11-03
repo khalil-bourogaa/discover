@@ -430,3 +430,121 @@ body:before{background:radial-gradient(ellipse at 12% 18%,var(--country-glow,rgb
 @keyframes paperCurl{0%{opacity:.1;transform:translateX(-12%)}45%{opacity:1;transform:translateX(0)}100%{opacity:.12;transform:translateX(12%)}}
 @media(max-width:700px){.bookshell{cursor:default}.leaf.single{transition:transform .82s cubic-bezier(.22,.72,.16,1),filter .82s}.leaf.single.flipped{filter:drop-shadow(-8px 5px 9px #0005)}}
 @media(prefers-reduced-motion:reduce){.cinematic-intro-tap{animation:none}.leaf,.book3d,.post-card{transition:none!important}}
+
+/* ================= DISCOVER v4 — smoother transitions & airport guide ================= */
+/* colour tokens are registered so the whole site glides between country palettes (gradients can't transition otherwise) */
+@property --bg{syntax:"<color>";inherits:true;initial-value:#080d16}
+@property --panel{syntax:"<color>";inherits:true;initial-value:#101a27}
+@property --panel2{syntax:"<color>";inherits:true;initial-value:#152334}
+@property --gold{syntax:"<color>";inherits:true;initial-value:#d9b47b}
+@property --mint{syntax:"<color>";inherits:true;initial-value:#86cbb8}
+@property --country-glow{syntax:"<color>";inherits:true;initial-value:rgba(26,101,112,.18)}
+:root{transition:--bg 1s ease,--panel 1s ease,--panel2 1s ease,--gold 1s ease,--mint 1s ease,--country-glow 1s ease}
+html{scroll-padding-top:90px}
+::selection{background:var(--gold);color:#101820}
+.btn,.chip-btn,.air-chip-btn,.style-chip,.air-pill,.pick,.destination-card,.food-card,.post-card{transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s,border-color .3s,background .3s,color .3s,opacity .3s}
+.btn:hover{transform:translateY(-2px)}
+.btn:active,.chip-btn:active,.style-chip:active,.air-chip-btn:active{transform:scale(.97)}
+.destination-card:hover,.food-card:hover{transform:translateY(-4px)}
+/* guide: animate only when the content really changes (no flicker while dragging the slider) */
+.g-panel:not(.fresh){animation:none}
+.g-panel:not(.fresh) *{animation:none!important}
+.g-stats:not(.fresh) .g-stat{animation:none}
+.g-panel.fresh{animation:panelIn .55s cubic-bezier(.2,.7,.2,1) both}
+@keyframes panelIn{from{opacity:0;transform:translateY(14px) scale(.995)}to{opacity:1;transform:none}}
+.guide-card{transition:background-color .8s,border-color .8s,box-shadow .4s}
+.g-tabs{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}.g-tabs::-webkit-scrollbar{display:none}
+.g-tabs button{white-space:nowrap}
+/* destination cards: airport chip */
+.air-chip{display:inline-flex;margin-top:10px;margin-inline-end:8px;padding:4px 8px;border:1px solid color-mix(in srgb,var(--gold) 45%,transparent);color:var(--gold);font-size:9px;letter-spacing:1.2px;font-weight:700;border-radius:20px;animation:chipIn .5s both}
+@keyframes chipIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* airport strip in Explore */
+.air-strip{display:none;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 30px;padding:16px 20px;background:linear-gradient(120deg,var(--panel),transparent);border:1px solid var(--line);border-inline-start:2px solid var(--gold)}
+.air-strip.on{display:flex;animation:riseIn .6s both}
+.air-strip-list{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+.air-pill{display:inline-flex;align-items:center;gap:8px;background:#0f1925;border:1px solid var(--line);color:#dbe2e8;padding:8px 12px;font-size:11px;cursor:pointer;border-radius:30px;font-family:inherit}
+.air-pill b{color:var(--gold);letter-spacing:1.5px;font-size:12px}
+.air-pill:hover{border-color:var(--gold);transform:translateY(-2px)}
+.air-strip-more{background:none;border:0;color:var(--gold);font:700 10px var(--sans);letter-spacing:1.5px;cursor:pointer;text-transform:uppercase;padding:8px 4px}
+.air-strip-more:hover{text-decoration:underline}
+/* airport tab */
+.air-hero{display:flex;gap:26px;align-items:center;flex-wrap:wrap;padding:26px;background:linear-gradient(135deg,var(--panel2),var(--panel));border:1px solid var(--line);margin-bottom:18px;position:relative;overflow:hidden}
+.air-code{font:700 clamp(54px,9vw,96px)/1 var(--serif);color:var(--gold);letter-spacing:4px;opacity:.95}
+.air-hero:after{content:"✈";position:absolute;inset-inline-end:20px;top:6px;font-size:90px;opacity:.06;transform:rotate(-12deg)}
+.air-hero h3{font:500 24px var(--serif);margin:8px 0 16px}
+.air-actions{display:flex;gap:10px;flex-wrap:wrap}
+.air-chips,.style-chips{display:flex;gap:8px;flex-wrap:wrap}
+.air-chips{margin-bottom:26px}
+.air-chip-btn,.style-chip{background:#0f1925;border:1px solid var(--line);color:#cfd7de;padding:9px 13px;font:500 11px var(--sans);cursor:pointer;border-radius:30px;display:inline-flex;gap:8px;align-items:center}
+.air-chip-btn b{color:var(--gold);letter-spacing:1.4px}
+.air-chip-btn:hover,.style-chip:hover{border-color:var(--gold);transform:translateY(-2px)}
+.air-chip-btn[aria-pressed=true],.style-chip[aria-pressed=true]{background:var(--gold);color:#16202a;border-color:var(--gold)}
+.air-chip-btn[aria-pressed=true] b{color:#16202a}
+.air-sub{margin:28px 0}.air-sub .panel-kicker{display:block;margin-bottom:12px}
+.air-lead{color:var(--muted);font-size:12px;line-height:1.7;margin-bottom:14px}
+.pick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.pick{display:block;position:relative;background:#101c2a;border:1px solid var(--line);padding:20px 22px;color:inherit;text-decoration:none;animation:riseIn .55s both;animation-delay:calc(var(--i)*90ms)}
+.pick:hover{border-color:color-mix(in srgb,var(--gold) 55%,transparent);transform:translateY(-4px);box-shadow:0 18px 40px #0007}
+.pick h4{font:500 19px var(--serif);margin:10px 0 6px}
+.pick p{font-size:11px;color:var(--muted);line-height:1.7}
+.pick-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;font-size:10px;letter-spacing:.8px;color:var(--gold);font-weight:700}
+.pick-why{margin-top:8px;font-size:10px;color:var(--mint)}
+.pick-warn{margin-top:8px;font-size:10px;color:#e9a27a}
+.pick .maps-link{opacity:1;transform:none;margin-top:12px}
+.air-base{background:#101c2a;border-inline-start:2px solid var(--mint);padding:18px 22px;margin:26px 0}
+.air-base p{font-size:13px;line-height:1.7;color:#d6dde3;margin-top:8px}
+.air-base-sub{font-size:11px!important;color:var(--muted)!important}
+.air-table{display:grid;gap:1px;background:var(--line);margin:26px 0}
+.air-table .panel-kicker{background:var(--bg);padding:0 0 12px}
+.air-table a{display:grid;grid-template-columns:1fr auto auto 22px;gap:16px;align-items:center;background:#0f1925;color:#dbe2e8;text-decoration:none;padding:13px 18px;font-size:12px;transition:background .25s,padding .25s}
+.air-table a:hover{background:#15283a;padding-inline-start:24px}
+.air-table a span{color:var(--muted);font-size:11px}.air-table a i{color:var(--gold);font-style:normal}
+.air-tips{list-style:none;display:grid;gap:8px;padding:0}
+.air-tips li{font-size:12px;color:#cdd6dd;line-height:1.7;padding-inline-start:22px;position:relative}
+.air-tips li:before{content:"✓";position:absolute;inset-inline-start:0;color:var(--mint)}
+.air-advice{margin-top:14px;font-size:10px;color:#74838f}
+.air-note{font-size:11px;color:var(--mint);margin:0 0 14px}
+@media(max-width:700px){.air-hero{padding:20px}.air-table a{grid-template-columns:1fr auto 18px}.air-table a span:nth-of-type(2){display:none}.air-strip{padding:14px}}
+/* smoother reveals */
+.reveal{filter:blur(0)}
+@media(prefers-reduced-motion:reduce){:root{transition:none}.g-panel.fresh,.pick,.air-chip,.air-strip.on{animation:none!important}}
+
+/* ================= DISCOVER v5 ================= */
+#cineWipe{position:fixed;inset:0;z-index:450;pointer-events:none;display:grid;place-items:center;text-align:center;background:radial-gradient(circle at 50% 50%,#101a27,#04070c 75%);clip-path:circle(0% at 50% 50%);opacity:0}
+#cineWipe.go{animation:wipeRun 1.45s cubic-bezier(.65,.02,.2,1) both}
+@keyframes wipeRun{0%{clip-path:circle(0% at 50% 50%);opacity:1}38%{clip-path:circle(150% at 50% 50%);opacity:1}62%{clip-path:circle(150% at 50% 50%);opacity:1}100%{clip-path:circle(150% at 50% 50%);opacity:0}}
+#cineWipe .cw-inner{display:grid;gap:12px;justify-items:center;animation:cwText 1.45s ease both}
+@keyframes cwText{0%,22%{opacity:0;transform:translateY(24px) scale(.96);filter:blur(8px)}42%,60%{opacity:1;transform:none;filter:none}100%{opacity:0;transform:translateY(-16px) scale(1.04)}}
+.cw-name{font:600 clamp(40px,9vw,110px)/1 var(--serif);color:var(--cream);letter-spacing:-1px}
+.cw-sub{font-size:11px;letter-spacing:.35em;color:var(--gold)}
+.cw-flag img{width:64px;height:auto;border-radius:4px;box-shadow:0 8px 30px #0008}
+body.swap .banner-bg{animation:bannerZoom 1.6s cubic-bezier(.2,.7,.2,1) both}
+@keyframes bannerZoom{from{transform:scale(1.18);filter:blur(6px)}to{transform:none;filter:none}}
+body.swap .air-strip.on{animation:riseIn .8s .15s both}
+/* globe airport marker */
+.globe-airport{pointer-events:none;display:flex;align-items:center;gap:5px;transform:translate(-50%,-50%);color:#16202a;font:700 11px var(--sans);text-shadow:none}
+.globe-airport i{font-style:normal;background:var(--gold);border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font-size:12px;box-shadow:0 0 0 0 #ffd98aaa;animation:apPulse 1.8s infinite}
+.globe-airport b{background:#0b1420d9;color:var(--gold);padding:2px 6px;border-radius:10px;letter-spacing:1px}
+@keyframes apPulse{70%{box-shadow:0 0 0 14px #ffd98a00}100%{box-shadow:0 0 0 0 #ffd98a00}}
+/* trip map */
+.tmap{background:radial-gradient(circle at 30% 20%,var(--panel2),var(--panel));border:1px solid var(--line);overflow:hidden}
+.tmap svg{display:block;width:100%;height:auto}
+.tm-grid path{stroke:#ffffff0d;stroke-width:1}
+.tm-route{fill:none;stroke:var(--gold);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:routeDraw 2.2s .2s cubic-bezier(.4,0,.2,1) forwards;filter:drop-shadow(0 0 6px #d9b47b88)}
+@keyframes routeDraw{to{stroke-dashoffset:0}}
+.tm-plane{fill:var(--cream)}
+.mk{cursor:pointer;outline:0;animation:mkIn .5s var(--d) both}
+@keyframes mkIn{from{opacity:0}}
+.mk-dot{fill:var(--gold);stroke:#0b1420;stroke-width:3;transition:fill .25s}
+.mk-pulse{fill:none;stroke:var(--gold);stroke-width:1.5;opacity:0}
+.mk.active .mk-pulse{animation:mkPulse 1.6s infinite}
+@keyframes mkPulse{from{opacity:.9;r:13}to{opacity:0;r:26}}
+.mk:hover .mk-dot,.mk:focus-visible .mk-dot,.mk.active .mk-dot{fill:var(--mint)}
+.mk-n{fill:#16202a;font:700 12px var(--sans);text-anchor:middle;pointer-events:none}
+.mk-t{fill:var(--cream);font:600 12px var(--sans);text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:#0b1420;stroke-width:4px}
+.mk-air circle{fill:var(--mint);stroke:#0b1420;stroke-width:3}.mk-air text{text-anchor:middle;fill:#16202a;font-size:16px}.mk-air .mk-t{fill:var(--mint)}
+.map-info{margin-top:14px;background:#101c2a;border-inline-start:2px solid var(--gold);padding:18px 22px;display:grid;gap:6px;animation:riseIn .5s both}
+.map-info.in{animation:riseIn .4s both}
+.map-info b{font:500 22px var(--serif)}.mi-day{font-size:9px;letter-spacing:1.6px;font-weight:700;color:var(--gold)}
+.mi-meta{font-size:11px;color:var(--mint)}.map-info p{font-size:12px;color:var(--muted);line-height:1.7}.map-info a{color:var(--gold);font-size:11px;font-weight:700;text-decoration:none}
+@media(prefers-reduced-motion:reduce){#cineWipe,.tm-route,.mk{animation:none!important}.tm-route{stroke-dashoffset:0}}

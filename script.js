@@ -373,7 +373,7 @@ async function renderContent(code,token){
     setPlaces(cur.places.map((p,i)=>({title:p[0],tag:p[1],text:p[2],wiki:g.wiki[i]})),enName);
     $("#foodBlock").hidden=false;$("#foodGrid").innerHTML=cur.food.map(f=>foodCard({emoji:f[0],title:f[1],text:f[2]})).join("");
     wikiThumbs([...g.wiki,g.cover],1600).then(m=>{if(token!==renderToken)return;const c=m.get(g.cover);if(c&&c.url)setBackdrops(c.url);else searchImage(g.cover+" "+enName,1600).then(u=>{if(u&&token===renderToken)setBackdrops(u)});
-      const pins=g.wiki.map((w,i)=>{const r=m.get(w);return r&&r.lat!=null?{title:cur.places[i][0],lat:r.lat,lng:r.lng,idx:i}:null}).filter(Boolean);S.places.forEach((p,i)=>{const r=m.get(g.wiki[i]);if(r&&r.lat!=null){p.lat=r.lat;p.lng=r.lng}});setPins(pins)});
+      const pins=g.wiki.map((w,i)=>{const r=m.get(w);return r&&r.lat!=null?{title:cur.places[i][0],lat:r.lat,lng:r.lng,idx:i}:null}).filter(Boolean);S.places.forEach((p,i)=>{const r=m.get(g.wiki[i]);if(r&&r.lat!=null){p.lat=r.lat;p.lng=r.lng}});setPins(pins);paintGuide()});
   }else{
     $("#destinationGrid").innerHTML=skeletons(6);$("#placeCount").textContent="…";$("#foodBlock").hidden=false;$("#foodGrid").innerHTML=skeletons(4);
     getAttractions(code).then(list=>{if(token!==renderToken)return;
@@ -513,12 +513,12 @@ $("#surpriseBtn").addEventListener("click",()=>{let c;do{c=COUNTRY_LIST[Math.ran
 $("#selectedCountry").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;if(b.dataset.act==="wish")toggleWish(S.code);else if(b.dataset.act==="guide")$("#guide").scrollIntoView({behavior:"smooth"});else shareCountry()});
 /* ================= DISCOVER v3 — visitor guide ================= */
 const GS={tab:"plan",days:7,open:{}};
-function initGuide(code){GS.tab="plan";GS.open={};const g=GUIDE[code];GS.days=g?Math.min(10,Math.max(3,parseInt(g.days)||7)):5;paintGuide()}
+function initGuide(code){GS.tab="plan";GS.open={};GS.air=null;GS.styles=[];GS.fresh=true;GS.pc=-1;const g=GUIDE[code];GS.days=g?Math.min(10,Math.max(3,parseInt(g.days)||7)):5;paintGuide();GS.fresh=false}
 const packStore=()=>store.get("discoverPack",{});
 function checklist(kind,items){const st=packStore(),key=S.code+":"+kind,done=st[key]||[];
   return `<ul class="check">${items.map((x,i)=>`<li><label><input type="checkbox" data-pack="${key}" data-i="${i}" ${done.includes(i)?"checked":""}><span>${esc(x)}</span></label></li>`).join("")}</ul>`}
 function buildItinerary(n){
-  const pool=(S.places||[]).filter(p=>p&&p.title);const days=[];
+  const pool=orderedPool((S.places||[]).filter(p=>p&&p.title));const days=[];
   for(let i=0;i<n;i++){
     if(!pool.length){days.push([{title:t("flexDay"),text:t("flexText")}]);continue}
     if(n>pool.length&&i>=pool.length){days.push([{title:t("flexDay"),text:t("flexText"),flex:true}]);continue}
@@ -527,7 +527,7 @@ function buildItinerary(n){
   }
   return days;
 }
-function itineraryText(){const days=buildItinerary(GS.days);return `${nm(S.code)} — ${GS.days} ${t("daysWord")}\n`+days.map((d,i)=>`${t("dayWord")} ${i+1}: ${d.map(x=>x.title).join(" + ")}`).join("\n")}
+function itineraryText(){const days=buildItinerary(GS.days),ap=curAir();return `${nm(S.code)} — ${GS.days} ${t("daysWord")}\n`+(ap?`✈ ${ap.iata} · ${ap.name}\n`:"")+days.map((d,i)=>`${t("dayWord")} ${i+1}: ${d.map(x=>x.title).join(" + ")}`).join("\n")}
 function stats(g){
   if(g)return[["gBest",g.best],["gDays",g.days],["gBudget",g.budget],["gAround",g.around]];
   const f=S.facts,out=[];
@@ -540,7 +540,7 @@ function tabPlan(g){
   const days=buildItinerary(GS.days);
   const route=g?`<div class="g-route"><span class="panel-kicker">${t("quickRoute")}</span><ol>${g.plan.map(x=>`<li>${esc(x)}</li>`).join("")}</ol></div>`:"";
   return `${route}<div class="g-trip"><label for="tripRange" class="panel-kicker">${t("tripLength")}</label><input id="tripRange" type="range" min="2" max="14" value="${GS.days}"><b id="tripVal">${GS.days} ${t("daysWord")}</b><button type="button" class="chip-btn" id="copyPlan">⧉ ${t("copyPlan")}</button></div>
-  <ol class="timeline">${days.map((d,i)=>`<li class="${d[0].flex?"flex":""}" style="--i:${i}"><span class="tl-day">${t("dayWord")} ${i+1}</span><div class="tl-body">${d.map(x=>`<div class="tl-item"><b>${esc(x.title)}</b><p>${esc(x.text||"")}</p></div>`).join("")}</div></li>`).join("")}</ol>`}
+  ${airNote()}<ol class="timeline">${days.map((d,i)=>`<li class="${d[0].flex?"flex":""}" style="--i:${i}"><span class="tl-day">${t("dayWord")} ${i+1}</span><div class="tl-body">${d.map(x=>`<div class="tl-item"><b>${esc(x.title)}</b><p>${esc(x.text||"")}</p></div>`).join("")}</div></li>`).join("")}</ol>`}
 function tabMust(g){
   if(g)return `<div class="must-grid">${g.must.map((m,i)=>`<div class="must" style="--i:${i}"><span class="must-n">${pad(i+1)}</span><h4>${esc(m[0])}</h4><p>${esc(m[1])}</p></div>`).join("")}</div>`;
   const list=S.places||[];return list.length?`<div class="must-grid">${list.map((m,i)=>`<div class="must" style="--i:${i}"><span class="must-n">${pad(i+1)}</span><h4>${esc(m.title)}</h4><p>${esc(m.text||"")}</p></div>`).join("")}</div>`:`<p class="g-empty">${t("guideLoading")}</p>`}
@@ -556,30 +556,802 @@ function tabKnow(g){
   }
   return `<div class="know-grid">${cols}<div class="know-col"><span class="panel-kicker">${t("beforeGo")}</span>${checklist("before",[1,2,3,4].map(i=>t("chk"+i)))}</div></div>`}
 function tabPack(g){const items=[...(g?g.pack:[]),...[1,2,3,4].map(i=>t("pk"+i))];return checklist("pack",items)}
-function tabPhr(g){return `<div class="phrase-grid">${g.phrases.map((p,i)=>`<div class="phrase"><small>${["Hello","Thank you","Please","How much?","English?"][i]||""}</small><b>${esc(p)}</b></div>`).join("")}</div>`}
+function tabPhr(g){return `<div class="phrase-grid">${g.phrases.map((p,i)=>`<div class="phrase"><small>${[t("phHello"),t("phThanks"),t("phPlease"),t("phHowMuch"),t("phEnglish")][i]||""}</small><b>${esc(p)}</b></div>`).join("")}</div>`}
 function tabMore(){return `<div class="acc">${(S.voyage||[]).map((s,i)=>`<details ${GS.open[i]?"open":""} data-acc="${i}"><summary>${esc(s.h)}</summary><div class="acc-body">${esc(short(s.t,1600)).split(/\n{2,}|\n/).map(x=>`<p>${x}</p>`).join("")}</div></details>`).join("")}</div>`}
 function paintGuide(){
   const box=$("#guideBody");if(!box)return;
   const g=GUIDE[S.code];
-  const tabs=[["plan","tPlan"],["must","tHighlights"],["know","tKnow"],["pack","tPack"]];
+  const tabs=[["plan","tPlan"],["air","tAir"],["map","tMap"],["must","tHighlights"],["know","tKnow"],["pack","tPack"]];
   if(g)tabs.push(["phr","tPhrases"]);
   if(S.voyage&&S.voyage.length)tabs.push(["more","tMore"]);
   if(!tabs.some(x=>x[0]===GS.tab))GS.tab="plan";
   const st=stats(g).filter(x=>x[1]);
-  const body={plan:tabPlan,must:tabMust,know:tabKnow,pack:tabPack,phr:tabPhr,more:tabMore}[GS.tab](g);
+  const body={plan:tabPlan,air:tabAir,map:tabMap,must:tabMust,know:tabKnow,pack:tabPack,phr:tabPhr,more:tabMore}[GS.tab](g);
+  const pc=(S.places||[]).length,fresh=GS.fresh||GS.pc!==pc;GS.pc=pc;
   const keepScroll=document.activeElement&&document.activeElement.id==="tripRange";
-  box.innerHTML=`${st.length?`<div class="g-stats">${st.map(([k,v],i)=>`<div class="g-stat" style="--i:${i}"><small>${t(k)}</small><b>${esc(v)}</b></div>`).join("")}</div>`:""}
+  box.innerHTML=`${st.length?`<div class="g-stats${fresh?" fresh":""}">${st.map(([k,v],i)=>`<div class="g-stat" style="--i:${i}"><small>${t(k)}</small><b>${esc(v)}</b></div>`).join("")}</div>`:""}
   <div class="g-tabs" role="tablist">${tabs.map(([k,l])=>`<button type="button" role="tab" aria-selected="${k===GS.tab}" data-tab="${k}">${t(l)}</button>`).join("")}</div>
-  <div class="g-panel" role="tabpanel">${body}</div><p class="g-src">${t("guideSource")}</p>`;
+  <div class="g-panel${fresh?" fresh":""}" role="tabpanel">${body}</div><p class="g-src">${t("guideSource")}</p>`;
   if(keepScroll){const r=$("#tripRange");if(r)r.focus()}
+  decoratePlaces();renderAirStrip();syncFlights();
 }
 $("#guideBody").addEventListener("click",e=>{
-  const tb=e.target.closest("[data-tab]");if(tb){GS.tab=tb.dataset.tab;paintGuide();return}
+  const tb=e.target.closest("[data-tab]");if(tb){GS.tab=tb.dataset.tab;GS.fresh=true;paintGuide();GS.fresh=false;return}
   if(e.target.closest("#copyPlan")){const txt=itineraryText();(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast(t("planCopied")),()=>toast(txt.split("\n")[0]))}
 });
 $("#guideBody").addEventListener("input",e=>{if(e.target.id==="tripRange"){GS.days=+e.target.value;paintGuide()}});
 $("#guideBody").addEventListener("change",e=>{const c=e.target.closest("[data-pack]");if(!c)return;const st=packStore(),key=c.dataset.pack,i=+c.dataset.i;const arr=new Set(st[key]||[]);c.checked?arr.add(i):arr.delete(i);st[key]=[...arr];store.set("discoverPack",st)});
 $("#guideBody").addEventListener("toggle",e=>{const d=e.target;if(d.dataset&&d.dataset.acc!=null)GS.open[d.dataset.acc]=d.open},true);
+/* ================= DISCOVER v4 — airports, arrival planner & smart suggestions ================= */
+const AIRPORT_DATA=`AF|KBL|Kabul|34.57|69.21
+AL|TIA|Tirana Rinas|41.42|19.72
+DZ|ALG|Algiers Houari Boumediene|36.69|3.22
+DZ|ORN|Oran Es Sénia|35.62|-0.62
+DZ|CZL|Constantine Mohamed Boudiaf|36.28|6.62
+AD|LEU|Andorra–La Seu d'Urgell|42.34|1.41
+AO|LAD|Luanda Quatro de Fevereiro|-8.86|13.23
+AG|ANU|Antigua V.C. Bird|17.14|-61.79
+AR|EZE|Buenos Aires Ezeiza|-34.82|-58.54
+AR|AEP|Buenos Aires Aeroparque|-34.56|-58.42
+AR|COR|Córdoba|-31.32|-64.21
+AR|MDZ|Mendoza|-32.83|-68.79
+AR|BRC|Bariloche|-41.15|-71.16
+AR|IGR|Iguazú|-25.74|-54.47
+AR|FTE|El Calafate|-50.28|-72.05
+AR|USH|Ushuaia|-54.84|-68.31
+AR|SLA|Salta|-24.86|-65.49
+AM|EVN|Yerevan Zvartnots|40.15|44.40
+AU|SYD|Sydney|-33.94|151.18
+AU|MEL|Melbourne|-37.67|144.84
+AU|BNE|Brisbane|-27.38|153.12
+AU|PER|Perth|-31.94|115.97
+AU|ADL|Adelaide|-34.95|138.53
+AU|CNS|Cairns|-16.89|145.76
+AU|OOL|Gold Coast|-28.16|153.50
+AU|HBA|Hobart|-42.84|147.51
+AU|CBR|Canberra|-35.31|149.19
+AU|DRW|Darwin|-12.41|130.88
+AU|ASP|Alice Springs|-23.80|133.90
+AU|AYQ|Uluru Ayers Rock|-25.19|130.98
+AT|VIE|Vienna|48.11|16.57
+AT|SZG|Salzburg|47.79|13.00
+AT|INN|Innsbruck|47.26|11.34
+AT|GRZ|Graz|46.99|15.44
+AZ|GYD|Baku Heydar Aliyev|40.47|50.05
+BS|NAS|Nassau Lynden Pindling|25.04|-77.47
+BS|FPO|Freeport Grand Bahama|26.56|-78.70
+BH|BAH|Bahrain|26.27|50.63
+BD|DAC|Dhaka Hazrat Shahjalal|23.84|90.40
+BD|CGP|Chittagong|22.25|91.81
+BD|CXB|Cox's Bazar|21.45|91.96
+BB|BGI|Barbados Grantley Adams|13.07|-59.49
+BY|MSQ|Minsk|53.88|28.03
+BE|BRU|Brussels|50.90|4.48
+BE|CRL|Brussels South Charleroi|50.46|4.45
+BZ|BZE|Belize Philip Goldson|17.54|-88.31
+BJ|COO|Cotonou Cadjehoun|6.36|2.38
+BT|PBH|Paro|27.40|89.42
+BO|VVI|Santa Cruz Viru Viru|-17.64|-63.14
+BO|LPB|La Paz El Alto|-16.51|-68.19
+BO|CBB|Cochabamba|-17.42|-66.18
+BO|UYU|Uyuni|-20.45|-66.85
+BA|SJJ|Sarajevo|43.82|18.33
+BW|GBE|Gaborone Sir Seretse Khama|-24.56|25.92
+BW|MUB|Maun|-19.97|23.43
+BW|BBK|Kasane|-17.83|25.16
+BR|GIG|Rio de Janeiro Galeão|-22.81|-43.25
+BR|SDU|Rio de Janeiro Santos Dumont|-22.91|-43.16
+BR|GRU|São Paulo Guarulhos|-23.43|-46.47
+BR|BSB|Brasília|-15.87|-47.92
+BR|SSA|Salvador|-12.91|-38.33
+BR|REC|Recife|-8.13|-34.92
+BR|FOR|Fortaleza|-3.78|-38.53
+BR|MAO|Manaus|-3.04|-60.05
+BR|IGU|Foz do Iguaçu|-25.60|-54.49
+BR|FLN|Florianópolis|-27.67|-48.55
+BR|POA|Porto Alegre|-29.99|-51.17
+BR|CWB|Curitiba|-25.53|-49.18
+BR|NAT|Natal|-5.77|-35.37
+BR|BEL|Belém|-1.38|-48.48
+BN|BWN|Brunei|4.94|114.93
+BG|SOF|Sofia|42.70|23.41
+BG|VAR|Varna|43.23|27.83
+BG|BOJ|Burgas|42.57|27.52
+BF|OUA|Ouagadougou|12.35|-1.51
+BI|BJM|Bujumbura|-3.32|29.32
+CV|RAI|Praia|14.94|-23.49
+CV|SID|Sal Amílcar Cabral|16.74|-22.95
+CV|BVC|Boa Vista|16.14|-22.89
+KH|PNH|Phnom Penh|11.55|104.84
+KH|SAI|Siem Reap Angkor|13.37|104.27
+CM|DLA|Douala|4.01|9.72
+CM|NSI|Yaoundé Nsimalen|3.72|11.55
+CA|YYZ|Toronto Pearson|43.68|-79.63
+CA|YVR|Vancouver|49.19|-123.18
+CA|YUL|Montréal Trudeau|45.47|-73.74
+CA|YYC|Calgary|51.11|-114.02
+CA|YOW|Ottawa|45.32|-75.67
+CA|YEG|Edmonton|53.31|-113.58
+CA|YQB|Québec City|46.79|-71.39
+CA|YHZ|Halifax|44.88|-63.51
+CA|YWG|Winnipeg|49.91|-97.24
+CF|BGF|Bangui|4.40|18.52
+TD|NDJ|N'Djamena|12.13|15.03
+CL|SCL|Santiago|-33.39|-70.79
+CL|PUQ|Punta Arenas|-53.00|-70.85
+CL|IPC|Easter Island|-27.16|-109.42
+CL|ANF|Antofagasta|-23.44|-70.44
+CL|CJC|Calama (Atacama)|-22.50|-68.90
+CL|PMC|Puerto Montt|-41.44|-73.09
+CN|PEK|Beijing Capital|40.08|116.59
+CN|PKX|Beijing Daxing|39.51|116.41
+CN|PVG|Shanghai Pudong|31.14|121.81
+CN|CAN|Guangzhou Baiyun|23.39|113.30
+CN|CTU|Chengdu Shuangliu|30.58|103.95
+CN|XIY|Xi'an Xianyang|34.45|108.75
+CN|SZX|Shenzhen|22.64|113.81
+CN|HGH|Hangzhou|30.23|120.43
+CN|KMG|Kunming|25.10|102.93
+CN|CKG|Chongqing|29.72|106.64
+CN|URC|Ürümqi|43.91|87.47
+CN|LXA|Lhasa|29.30|90.91
+CN|KWL|Guilin|25.22|110.04
+CN|HAK|Haikou|19.93|110.46
+CO|BOG|Bogotá El Dorado|4.70|-74.15
+CO|MDE|Medellín|6.17|-75.43
+CO|CTG|Cartagena|10.44|-75.51
+CO|CLO|Cali|3.54|-76.38
+CO|ADZ|San Andrés|12.58|-81.71
+KM|HAH|Moroni Prince Said Ibrahim|-11.53|43.27
+CG|BZV|Brazzaville Maya-Maya|-4.25|15.25
+CD|FIH|Kinshasa N'djili|-4.39|15.44
+CR|SJO|San José Juan Santamaría|9.99|-84.21
+CR|LIR|Liberia Daniel Oduber|10.59|-85.54
+CI|ABJ|Abidjan Félix-Houphouët-Boigny|5.26|-3.93
+HR|ZAG|Zagreb|45.74|16.07
+HR|SPU|Split|43.54|16.30
+HR|DBV|Dubrovnik|42.56|18.27
+HR|PUY|Pula|44.89|13.92
+CU|HAV|Havana José Martí|22.99|-82.41
+CU|VRA|Varadero|23.03|-81.44
+CY|LCA|Larnaca|34.88|33.62
+CY|PFO|Paphos|34.72|32.49
+CZ|PRG|Prague Václav Havel|50.10|14.26
+DK|CPH|Copenhagen|55.62|12.65
+DK|BLL|Billund|55.74|9.15
+DJ|JIB|Djibouti Ambouli|11.55|43.16
+DM|DOM|Dominica Douglas–Charles|15.55|-61.30
+DO|PUJ|Punta Cana|18.57|-68.36
+DO|SDQ|Santo Domingo Las Américas|18.43|-69.67
+DO|POP|Puerto Plata|19.76|-70.57
+EC|UIO|Quito Mariscal Sucre|-0.14|-78.36
+EC|GYE|Guayaquil|-2.16|-79.88
+EC|GPS|Galápagos Baltra|-0.45|-90.27
+EG|CAI|Cairo|30.12|31.41
+EG|SPX|Giza Sphinx|30.11|30.89
+EG|HRG|Hurghada|27.18|33.80
+EG|SSH|Sharm El Sheikh|27.98|34.39
+EG|LXR|Luxor|25.67|32.71
+EG|ASW|Aswan|23.96|32.82
+EG|HBE|Alexandria Borg El Arab|30.92|29.70
+EG|RMF|Marsa Alam|25.56|34.58
+SV|SAL|San Salvador Óscar Romero|13.44|-89.06
+GQ|SSG|Malabo|3.76|8.71
+ER|ASM|Asmara|15.29|38.91
+EE|TLL|Tallinn|59.41|24.83
+SZ|SHO|Eswatini King Mswati III|-26.36|31.72
+ET|ADD|Addis Ababa Bole|8.98|38.80
+FJ|NAN|Nadi|-17.76|177.44
+FJ|SUV|Suva Nausori|-18.04|178.56
+FI|HEL|Helsinki|60.32|24.96
+FI|RVN|Rovaniemi|66.56|25.83
+FI|OUL|Oulu|64.93|25.35
+FR|CDG|Paris Charles de Gaulle|49.01|2.55
+FR|ORY|Paris Orly|48.72|2.38
+FR|NCE|Nice Côte d'Azur|43.66|7.22
+FR|MRS|Marseille Provence|43.44|5.22
+FR|LYS|Lyon Saint-Exupéry|45.73|5.09
+FR|TLS|Toulouse Blagnac|43.63|1.37
+FR|BOD|Bordeaux|44.83|-0.72
+FR|NTE|Nantes|47.15|-1.61
+FR|SXB|Strasbourg|48.54|7.63
+FR|BIA|Bastia (Corsica)|42.55|9.48
+FR|AJA|Ajaccio (Corsica)|41.92|8.80
+FR|MPL|Montpellier|43.58|3.96
+FR|BIQ|Biarritz|43.47|-1.52
+FR|LIL|Lille|50.56|3.09
+GA|LBV|Libreville Léon-Mba|0.46|9.41
+GM|BJL|Banjul|13.34|-16.65
+GE|TBS|Tbilisi|41.67|44.95
+GE|BUS|Batumi|41.61|41.60
+DE|FRA|Frankfurt|50.04|8.57
+DE|MUC|Munich|48.35|11.79
+DE|BER|Berlin Brandenburg|52.36|13.50
+DE|DUS|Düsseldorf|51.29|6.77
+DE|HAM|Hamburg|53.63|9.99
+DE|STR|Stuttgart|48.69|9.22
+DE|CGN|Cologne Bonn|50.87|7.14
+DE|NUE|Nuremberg|49.50|11.07
+DE|LEJ|Leipzig Halle|51.42|12.24
+DE|DRS|Dresden|51.13|13.77
+DE|HAJ|Hanover|52.46|9.69
+GH|ACC|Accra Kotoka|5.61|-0.17
+GR|ATH|Athens Eleftherios Venizelos|37.94|23.94
+GR|HER|Heraklion (Crete)|35.34|25.18
+GR|CHQ|Chania (Crete)|35.53|24.15
+GR|JTR|Santorini|36.40|25.48
+GR|JMK|Mykonos|37.44|25.35
+GR|RHO|Rhodes|36.41|28.09
+GR|SKG|Thessaloniki|40.52|22.97
+GR|CFU|Corfu|39.60|19.91
+GR|ZTH|Zakynthos|37.75|20.88
+GR|KGS|Kos|36.79|27.09
+GD|GND|Grenada Maurice Bishop|12.00|-61.79
+GT|GUA|Guatemala City La Aurora|14.58|-90.53
+GT|FRS|Flores (Tikal)|16.91|-89.87
+GN|CKY|Conakry|9.58|-13.61
+GW|OXB|Bissau|11.89|-15.65
+GY|GEO|Georgetown Cheddi Jagan|6.50|-58.25
+HT|PAP|Port-au-Prince|18.58|-72.29
+HN|TGU|Tegucigalpa Toncontín|14.06|-87.22
+HN|SAP|San Pedro Sula|15.45|-87.92
+HN|RTB|Roatán|16.32|-86.52
+HU|BUD|Budapest Ferenc Liszt|47.44|19.26
+IS|KEF|Reykjavík Keflavík|63.99|-22.62
+IN|DEL|Delhi|28.56|77.10
+IN|BOM|Mumbai|19.09|72.87
+IN|BLR|Bengaluru|13.20|77.71
+IN|MAA|Chennai|12.99|80.17
+IN|CCU|Kolkata|22.65|88.45
+IN|HYD|Hyderabad|17.24|78.43
+IN|GOI|Goa Dabolim|15.38|73.83
+IN|GOX|Goa Mopa|15.74|73.87
+IN|JAI|Jaipur|26.82|75.81
+IN|COK|Kochi|10.15|76.40
+IN|AMD|Ahmedabad|23.08|72.63
+IN|IXL|Leh|34.13|77.55
+IN|ATQ|Amritsar|31.71|74.80
+IN|VNS|Varanasi|25.45|82.86
+ID|DPS|Bali Ngurah Rai|-8.75|115.17
+ID|CGK|Jakarta Soekarno–Hatta|-6.13|106.66
+ID|SUB|Surabaya|-7.38|112.79
+ID|JOG|Yogyakarta|-7.90|110.06
+ID|LOP|Lombok|-8.76|116.28
+ID|UPG|Makassar|-5.06|119.55
+ID|KNO|Medan Kualanamu|3.64|98.88
+ID|LBJ|Labuan Bajo (Komodo)|-8.49|119.89
+IR|IKA|Tehran Imam Khomeini|35.42|51.15
+IR|SYZ|Shiraz|29.54|52.59
+IR|IFN|Isfahan|32.75|51.86
+IR|MHD|Mashhad|36.23|59.64
+IQ|BGW|Baghdad|33.26|44.23
+IQ|EBL|Erbil|36.24|43.96
+IQ|BSR|Basra|30.55|47.66
+IQ|NJF|Najaf|31.99|44.40
+IE|DUB|Dublin|53.42|-6.27
+IE|SNN|Shannon|52.70|-8.92
+IE|ORK|Cork|51.84|-8.49
+IE|NOC|Ireland West Knock|53.91|-8.82
+IE|KIR|Kerry|52.18|-9.52
+IL|TLV|Tel Aviv Ben Gurion|32.01|34.89
+IL|ETH|Eilat Ramon|29.72|35.01
+IT|FCO|Rome Fiumicino|41.80|12.25
+IT|MXP|Milan Malpensa|45.63|8.72
+IT|LIN|Milan Linate|45.45|9.28
+IT|BGY|Milan Bergamo|45.67|9.70
+IT|VCE|Venice Marco Polo|45.51|12.35
+IT|NAP|Naples|40.89|14.29
+IT|FLR|Florence|43.81|11.20
+IT|PSA|Pisa Galileo Galilei|43.68|10.39
+IT|BLQ|Bologna|44.53|11.29
+IT|CTA|Catania (Sicily)|37.47|15.07
+IT|PMO|Palermo (Sicily)|38.18|13.10
+IT|CAG|Cagliari (Sardinia)|39.25|9.06
+IT|OLB|Olbia (Sardinia)|40.90|9.52
+IT|AHO|Alghero (Sardinia)|40.63|8.29
+IT|BRI|Bari|41.14|16.76
+IT|TRN|Turin|45.20|7.65
+IT|VRN|Verona|45.40|10.89
+IT|SUF|Lamezia Terme (Calabria)|38.91|16.24
+IT|TRS|Trieste|45.83|13.47
+IT|GOA|Genoa|44.41|8.84
+IT|RMI|Rimini|44.02|12.61
+JM|KIN|Kingston Norman Manley|17.94|-76.79
+JM|MBJ|Montego Bay|18.50|-77.91
+JP|HND|Tokyo Haneda|35.55|139.78
+JP|NRT|Tokyo Narita|35.77|140.39
+JP|KIX|Osaka Kansai|34.43|135.24
+JP|ITM|Osaka Itami|34.79|135.44
+JP|NGO|Nagoya Chubu|34.86|136.81
+JP|FUK|Fukuoka|33.59|130.45
+JP|CTS|Sapporo New Chitose|42.78|141.69
+JP|OKA|Okinawa Naha|26.20|127.65
+JP|ISG|Ishigaki|24.34|124.19
+JP|HIJ|Hiroshima|34.44|132.92
+JP|KMQ|Komatsu (Kanazawa)|36.39|136.41
+JP|SDJ|Sendai|38.14|140.92
+JP|KOJ|Kagoshima|31.80|130.72
+JP|HKD|Hakodate|41.77|140.82
+JP|NGS|Nagasaki|32.92|129.91
+JP|TAK|Takamatsu|34.21|134.02
+JP|MYJ|Matsuyama|33.83|132.70
+JP|KMJ|Kumamoto|32.84|130.86
+JO|AMM|Amman Queen Alia|31.72|35.99
+JO|AQJ|Aqaba King Hussein|29.61|35.02
+KZ|ALA|Almaty|43.35|77.04
+KZ|NQZ|Astana Nursultan Nazarbayev|51.02|71.47
+KE|NBO|Nairobi Jomo Kenyatta|-1.32|36.93
+KE|MBA|Mombasa Moi|-4.03|39.59
+KI|TRW|Tarawa Bonriki|1.38|173.15
+KP|FNJ|Pyongyang Sunan|39.22|125.67
+KR|ICN|Seoul Incheon|37.46|126.44
+KR|GMP|Seoul Gimpo|37.56|126.80
+KR|PUS|Busan Gimhae|35.18|128.94
+KR|CJU|Jeju|33.51|126.49
+KR|TAE|Daegu|35.89|128.66
+KR|CJJ|Cheongju|36.72|127.50
+KR|YNY|Yangyang (Seoraksan)|38.06|128.67
+KW|KWI|Kuwait|29.23|47.97
+KG|FRU|Bishkek Manas|43.06|74.48
+KG|OSS|Osh|40.61|72.79
+LA|VTE|Vientiane Wattay|17.99|102.56
+LA|LPQ|Luang Prabang|19.90|102.16
+LV|RIX|Riga|56.92|23.97
+LB|BEY|Beirut Rafic Hariri|33.82|35.49
+LS|MSU|Maseru Moshoeshoe I|-29.46|27.55
+LR|ROB|Monrovia Roberts|6.23|-10.36
+LY|TIP|Tripoli Mitiga|32.89|13.28
+LI|ZRH|Zürich (nearest)|47.46|8.55
+LT|VNO|Vilnius|54.63|25.29
+LU|LUX|Luxembourg Findel|49.63|6.20
+MG|TNR|Antananarivo Ivato|-18.80|47.48
+MW|LLW|Lilongwe Kamuzu|-13.79|33.78
+MY|KUL|Kuala Lumpur|2.75|101.71
+MY|PEN|Penang|5.30|100.28
+MY|BKI|Kota Kinabalu|5.94|116.05
+MY|KCH|Kuching|1.49|110.34
+MY|LGK|Langkawi|6.33|99.73
+MY|JHB|Johor Bahru Senai|1.64|103.67
+MV|MLE|Malé Velana|4.19|73.53
+ML|BKO|Bamako Sénou|12.53|-7.95
+MT|MLA|Malta|35.86|14.48
+MH|MAJ|Majuro Marshall Islands|7.06|171.27
+MR|NKC|Nouakchott Oumtounsy|18.31|-15.97
+MU|MRU|Mauritius Sir Seewoosagur Ramgoolam|-20.43|57.68
+MX|MEX|Mexico City Benito Juárez|19.44|-99.07
+MX|CUN|Cancún|21.04|-86.87
+MX|TQO|Tulum|20.22|-87.45
+MX|CZM|Cozumel|20.52|-86.93
+MX|MID|Mérida|20.94|-89.66
+MX|GDL|Guadalajara|20.52|-103.31
+MX|SJD|Los Cabos|23.15|-109.72
+MX|PVR|Puerto Vallarta|20.68|-105.25
+MX|MTY|Monterrey|25.78|-100.11
+MX|OAX|Oaxaca|17.00|-96.73
+MX|TIJ|Tijuana|32.54|-116.97
+FM|PNI|Pohnpei|6.98|158.21
+MD|KIV|Chișinău|46.93|28.93
+MC|NCE|Nice Côte d'Azur (nearest)|43.66|7.22
+MN|UBN|Ulaanbaatar Chinggis Khaan|47.65|106.82
+ME|TGD|Podgorica|42.36|19.25
+ME|TIV|Tivat|42.40|18.72
+MA|CMN|Casablanca Mohammed V|33.37|-7.59
+MA|RAK|Marrakech Menara|31.61|-8.04
+MA|FEZ|Fes–Saïss|33.93|-4.98
+MA|TNG|Tangier Ibn Battouta|35.73|-5.92
+MA|AGA|Agadir Al Massira|30.38|-9.55
+MA|RBA|Rabat–Salé|34.05|-6.75
+MA|ESU|Essaouira Mogador|31.40|-9.68
+MA|OZZ|Ouarzazate|30.94|-6.91
+MA|ERH|Errachidia (Merzouga)|31.95|-4.40
+MA|TTU|Tétouan (Chefchaouen)|35.59|-5.32
+MZ|MPM|Maputo|-25.92|32.57
+MZ|VNX|Vilankulo|-22.02|35.31
+MM|RGN|Yangon|16.91|96.13
+MM|MDL|Mandalay|21.70|95.98
+NA|WDH|Windhoek Hosea Kutako|-22.48|17.46
+NA|WVB|Walvis Bay|-22.98|14.65
+NR|INU|Nauru|-0.55|166.92
+NP|KTM|Kathmandu Tribhuvan|27.70|85.36
+NP|PKR|Pokhara|28.20|83.98
+NL|AMS|Amsterdam Schiphol|52.31|4.76
+NL|EIN|Eindhoven|51.45|5.37
+NL|RTM|Rotterdam The Hague|51.96|4.44
+NZ|AKL|Auckland|-37.01|174.79
+NZ|CHC|Christchurch|-43.49|172.53
+NZ|ZQN|Queenstown|-45.02|168.74
+NZ|WLG|Wellington|-41.33|174.81
+NI|MGA|Managua Augusto Sandino|12.14|-86.17
+NE|NIM|Niamey Diori Hamani|13.48|2.18
+NG|LOS|Lagos Murtala Muhammed|6.58|3.32
+NG|ABV|Abuja Nnamdi Azikiwe|9.01|7.26
+MK|SKP|Skopje|41.96|21.62
+MK|OHD|Ohrid|41.18|20.74
+NO|OSL|Oslo|60.19|11.10
+NO|BGO|Bergen|60.29|5.22
+NO|TOS|Tromsø|69.68|18.92
+NO|SVG|Stavanger|58.88|5.64
+NO|TRD|Trondheim|63.46|10.94
+OM|MCT|Muscat|23.59|58.28
+OM|SLL|Salalah|17.04|54.09
+PK|ISB|Islamabad|33.56|72.85
+PK|KHI|Karachi Jinnah|24.91|67.16
+PK|LHE|Lahore Allama Iqbal|31.52|74.40
+PW|ROR|Palau Roman Tmetuchl|7.37|134.54
+PS|TLV|Tel Aviv Ben Gurion (nearest)|32.01|34.89
+PS|AMM|Amman Queen Alia (nearest)|31.72|35.99
+PA|PTY|Panama City Tocumen|9.07|-79.38
+PA|BOC|Bocas del Toro|9.34|-82.25
+PG|POM|Port Moresby Jacksons|-9.44|147.22
+PY|ASU|Asunción Silvio Pettirossi|-25.24|-57.52
+PE|LIM|Lima Jorge Chávez|-12.02|-77.11
+PE|CUZ|Cusco (Machu Picchu)|-13.54|-71.94
+PE|AQP|Arequipa|-16.34|-71.58
+PE|IQT|Iquitos|-3.79|-73.31
+PE|JUL|Juliaca (Lake Titicaca)|-15.47|-70.16
+PH|MNL|Manila Ninoy Aquino|14.51|121.02
+PH|CEB|Cebu Mactan|10.31|123.98
+PH|MPH|Boracay Caticlan|11.92|121.95
+PH|KLO|Kalibo (Boracay)|11.68|122.38
+PH|PPS|Puerto Princesa (Palawan)|9.74|118.76
+PH|DVO|Davao|7.13|125.65
+PH|CRK|Clark|15.19|120.56
+PH|TAG|Bohol–Panglao|9.57|123.76
+PL|WAW|Warsaw Chopin|52.17|20.97
+PL|KRK|Kraków John Paul II|50.08|19.78
+PL|GDN|Gdańsk Lech Wałęsa|54.38|18.47
+PL|WRO|Wrocław|51.10|16.89
+PL|POZ|Poznań|52.42|16.83
+PT|LIS|Lisbon Humberto Delgado|38.78|-9.13
+PT|OPO|Porto Francisco Sá Carneiro|41.24|-8.68
+PT|FAO|Faro (Algarve)|37.01|-7.97
+PT|FNC|Madeira Funchal|32.69|-16.77
+PT|PDL|Ponta Delgada (Azores)|37.74|-25.70
+QA|DOH|Doha Hamad|25.27|51.61
+RO|OTP|Bucharest Henri Coandă|44.57|26.08
+RO|CLJ|Cluj-Napoca|46.79|23.69
+RO|TSR|Timișoara|45.81|21.34
+RO|SBZ|Sibiu|45.79|24.09
+RU|SVO|Moscow Sheremetyevo|55.97|37.41
+RU|DME|Moscow Domodedovo|55.41|37.91
+RU|LED|Saint Petersburg Pulkovo|59.80|30.27
+RU|KZN|Kazan|55.61|49.28
+RU|SVX|Yekaterinburg Koltsovo|56.74|60.80
+RU|AER|Sochi|43.45|39.96
+RU|OVB|Novosibirsk Tolmachevo|55.01|82.65
+RU|VVO|Vladivostok|43.40|132.15
+RW|KGL|Kigali|-1.97|30.14
+KN|SKB|St Kitts Robert Bradshaw|17.31|-62.72
+LC|UVF|Saint Lucia Hewanorra|13.73|-60.95
+LC|SLU|Saint Lucia George Charles|14.02|-60.99
+VC|SVD|St Vincent Argyle|13.14|-61.21
+WS|APW|Apia Faleolo|-13.83|-172.01
+SM|RMI|Rimini (nearest to San Marino)|44.02|12.61
+ST|TMS|São Tomé|0.38|6.71
+SA|RUH|Riyadh King Khalid|24.96|46.70
+SA|JED|Jeddah King Abdulaziz|21.68|39.16
+SA|MED|Madinah Prince Mohammad|24.55|39.70
+SA|DMM|Dammam King Fahd|26.47|49.80
+SN|DSS|Dakar Blaise Diagne|14.67|-17.07
+RS|BEG|Belgrade Nikola Tesla|44.82|20.31
+RS|INI|Niš|43.34|21.85
+SC|SEZ|Seychelles Mahé|-4.67|55.52
+SL|FNA|Freetown Lungi|8.62|-13.20
+SG|SIN|Singapore Changi|1.36|103.99
+SK|BTS|Bratislava|48.17|17.21
+SK|KSC|Košice|48.66|21.24
+SI|LJU|Ljubljana Jože Pučnik|46.22|14.46
+SB|HIR|Honiara Henderson|-9.43|160.05
+SO|MGQ|Mogadishu Aden Adde|2.01|45.30
+ZA|JNB|Johannesburg O.R. Tambo|-26.14|28.25
+ZA|CPT|Cape Town|-33.97|18.60
+ZA|DUR|Durban King Shaka|-29.61|31.12
+ZA|MQP|Kruger Mpumalanga|-25.38|31.11
+ZA|GRJ|George (Garden Route)|-34.00|22.38
+SS|JUB|Juba|4.87|31.60
+ES|MAD|Madrid Barajas|40.47|-3.56
+ES|BCN|Barcelona El Prat|41.30|2.08
+ES|AGP|Málaga Costa del Sol|36.67|-4.50
+ES|PMI|Palma de Mallorca|39.55|2.74
+ES|SVQ|Seville|37.42|-5.90
+ES|VLC|Valencia|39.49|-0.48
+ES|ALC|Alicante–Elche|38.28|-0.56
+ES|TFS|Tenerife South|28.04|-16.57
+ES|TFN|Tenerife North|28.48|-16.34
+ES|LPA|Gran Canaria|27.93|-15.39
+ES|ACE|Lanzarote|28.95|-13.61
+ES|FUE|Fuerteventura|28.45|-13.86
+ES|IBZ|Ibiza|38.87|1.37
+ES|MAH|Menorca|39.86|4.22
+ES|BIO|Bilbao|43.30|-2.91
+ES|GRX|Granada|37.19|-3.78
+ES|SCQ|Santiago de Compostela|42.90|-8.42
+ES|XRY|Jerez|36.74|-6.06
+LK|CMB|Colombo Bandaranaike|7.18|79.88
+SD|KRT|Khartoum|15.59|32.55
+SR|PBM|Paramaribo Zanderij|5.45|-55.19
+SE|ARN|Stockholm Arlanda|59.65|17.92
+SE|GOT|Gothenburg Landvetter|57.66|12.28
+SE|MMX|Malmö|55.54|13.37
+CH|ZRH|Zürich|47.46|8.55
+CH|GVA|Geneva|46.24|6.11
+CH|BSL|Basel–Mulhouse|47.59|7.53
+CH|BRN|Bern|46.91|7.50
+CH|SIR|Sion (Valais)|46.22|7.33
+SY|DAM|Damascus|33.41|36.52
+TJ|DYU|Dushanbe|38.54|68.83
+TZ|DAR|Dar es Salaam Julius Nyerere|-6.88|39.20
+TZ|JRO|Kilimanjaro|-3.43|37.07
+TZ|ZNZ|Zanzibar Abeid Amani Karume|-6.22|39.22
+TZ|ARK|Arusha|-3.37|36.63
+TH|BKK|Bangkok Suvarnabhumi|13.69|100.75
+TH|DMK|Bangkok Don Mueang|13.91|100.61
+TH|HKT|Phuket|8.11|98.32
+TH|CNX|Chiang Mai|18.77|98.96
+TH|CEI|Chiang Rai|19.95|99.88
+TH|USM|Koh Samui|9.55|100.06
+TH|KBV|Krabi|8.10|98.99
+TH|HDY|Hat Yai|6.93|100.39
+TH|UTP|Pattaya U-Tapao|12.68|101.01
+TL|DIL|Dili Nicolau Lobato|-8.55|125.52
+TG|LFW|Lomé Gnassingbé Eyadéma|6.17|1.25
+TO|TBU|Tonga Fuaʻamotu|-21.24|-175.15
+TT|POS|Trinidad Piarco|10.60|-61.34
+TT|TAB|Tobago A.N.R. Robinson|11.15|-60.83
+TN|TUN|Tunis–Carthage|36.85|10.23
+TN|NBE|Enfidha–Hammamet|36.08|10.44
+TN|MIR|Monastir Habib Bourguiba|35.76|10.75
+TN|DJE|Djerba–Zarzis|33.88|10.78
+TN|SFA|Sfax–Thyna|34.72|10.69
+TN|TOE|Tozeur–Nefta|33.94|8.11
+TN|TBJ|Tabarka–Aïn Draham|36.98|8.88
+TN|GAE|Gabès–Matmata|33.88|10.10
+TN|GAF|Gafsa–Ksar|34.42|8.82
+TR|IST|Istanbul|41.26|28.74
+TR|SAW|Istanbul Sabiha Gökçen|40.90|29.31
+TR|AYT|Antalya|36.90|30.80
+TR|ESB|Ankara Esenboğa|40.13|32.99
+TR|ADB|İzmir Adnan Menderes|38.29|27.15
+TR|DLM|Dalaman|36.71|28.79
+TR|BJV|Bodrum Milas|37.25|27.66
+TR|NAV|Nevşehir Cappadocia|38.77|34.53
+TR|ASR|Kayseri Erkilet|38.77|35.50
+TR|TZX|Trabzon|40.99|39.79
+TR|GZT|Gaziantep|36.95|37.48
+TM|ASB|Ashgabat|37.99|58.36
+TV|FUN|Funafuti|-8.52|179.20
+UG|EBB|Entebbe|0.04|32.44
+UA|KBP|Kyiv Boryspil|50.35|30.89
+AE|DXB|Dubai|25.25|55.36
+AE|AUH|Abu Dhabi Zayed|24.43|54.65
+AE|SHJ|Sharjah|25.33|55.52
+GB|LHR|London Heathrow|51.47|-0.45
+GB|LGW|London Gatwick|51.15|-0.19
+GB|STN|London Stansted|51.89|0.26
+GB|LCY|London City|51.51|0.06
+GB|MAN|Manchester|53.35|-2.27
+GB|EDI|Edinburgh|55.95|-3.37
+GB|GLA|Glasgow|55.87|-4.43
+GB|BHX|Birmingham|52.45|-1.75
+GB|BRS|Bristol|51.38|-2.72
+GB|LPL|Liverpool John Lennon|53.33|-2.85
+GB|BFS|Belfast International|54.66|-6.22
+GB|NCL|Newcastle|55.04|-1.69
+GB|CWL|Cardiff|51.40|-3.34
+GB|INV|Inverness|57.54|-4.05
+US|JFK|New York JFK|40.64|-73.78
+US|EWR|Newark|40.69|-74.17
+US|LGA|New York LaGuardia|40.78|-73.87
+US|LAX|Los Angeles|33.94|-118.41
+US|SFO|San Francisco|37.62|-122.38
+US|ORD|Chicago O'Hare|41.98|-87.90
+US|MIA|Miami|25.79|-80.29
+US|LAS|Las Vegas Harry Reid|36.08|-115.15
+US|SEA|Seattle–Tacoma|47.45|-122.31
+US|ATL|Atlanta|33.64|-84.43
+US|DFW|Dallas/Fort Worth|32.90|-97.04
+US|BOS|Boston Logan|42.36|-71.01
+US|IAD|Washington Dulles|38.95|-77.46
+US|MCO|Orlando|28.43|-81.31
+US|HNL|Honolulu|21.32|-157.92
+US|OGG|Maui Kahului|20.90|-156.43
+US|KOA|Kona (Hawaii)|19.74|-156.05
+US|LIH|Kauai Lihue|21.98|-159.34
+US|DEN|Denver|39.86|-104.67
+US|PHX|Phoenix Sky Harbor|33.44|-112.01
+US|MSY|New Orleans|29.99|-90.26
+US|ANC|Anchorage|61.17|-149.99
+US|SAN|San Diego|32.73|-117.19
+US|IAH|Houston Bush|29.98|-95.34
+US|PHL|Philadelphia|39.87|-75.24
+US|AUS|Austin|30.19|-97.67
+US|SLC|Salt Lake City|40.79|-111.98
+US|BNA|Nashville|36.12|-86.68
+US|FLL|Fort Lauderdale|26.07|-80.15
+US|MSP|Minneapolis–Saint Paul|44.88|-93.22
+US|DTW|Detroit|42.21|-83.35
+US|CLT|Charlotte|35.21|-80.94
+US|PDX|Portland|45.59|-122.60
+US|TPA|Tampa|27.98|-82.53
+US|BWI|Baltimore/Washington|39.18|-76.67
+US|RDU|Raleigh–Durham|35.88|-78.79
+US|MCI|Kansas City|39.30|-94.71
+UY|MVD|Montevideo Carrasco|-34.84|-56.03
+UY|PDP|Punta del Este|-34.86|-55.10
+UZ|TAS|Tashkent|41.26|69.28
+UZ|SKD|Samarkand|39.70|66.98
+UZ|BHK|Bukhara|39.77|64.48
+VU|VLI|Port Vila Bauerfield|-17.70|168.32
+VA|FCO|Rome Fiumicino (nearest to Vatican City)|41.80|12.25
+VE|CCS|Caracas Maiquetía|10.60|-66.99
+VN|SGN|Ho Chi Minh City Tan Son Nhat|10.82|106.66
+VN|HAN|Hanoi Noi Bai|21.22|105.81
+VN|DAD|Da Nang|16.04|108.20
+VN|CXR|Nha Trang Cam Ranh|12.00|109.22
+VN|PQC|Phu Quoc|10.17|103.99
+VN|HPH|Hai Phong Cat Bi|20.82|106.72
+VN|HUI|Hue Phu Bai|16.40|107.70
+VN|DLI|Da Lat Lien Khuong|11.75|108.37
+YE|ADE|Aden|12.83|45.03
+ZM|LUN|Lusaka Kenneth Kaunda|-15.33|28.45
+ZM|LVI|Livingstone (Victoria Falls)|-17.82|25.82
+ZW|HRE|Harare Robert Mugabe|-17.93|31.09
+ZW|VFA|Victoria Falls|-18.10|25.84
+`;
+const AIRPORTS=AIRPORT_DATA.trim().split("\n").map(l=>{const [cc,iata,name,lat,lng]=l.split("|");return{cc,iata,name,lat:+lat,lng:+lng}});
+const AIR_BY_CC={};AIRPORTS.forEach(a=>(AIR_BY_CC[a.cc]||(AIR_BY_CC[a.cc]=[])).push(a));
+const AIR_T={
+en:{tAir:"✈ Getting there",flyInto:"FLY INTO",airPlan:"Plan your arrival",airLoading:"Finding airports…",airYour:"YOUR ARRIVAL AIRPORT",airOpenMap:"Airport on map",airFlights:"Search flights",airFrom:"from",byRoad:"by road",airStyle:"WHAT DO YOU ENJOY?",s_culture:"History & culture",s_nature:"Nature",s_beach:"Beaches & sea",s_city:"City life",s_food:"Food & markets",s_relax:"Slow & relaxing",airPicks:"BEST PLACES FOR YOU",airPicksFirst:"Great first stops, ranked by interest and distance from your airport.",airPicksStyle:"Matched to what you enjoy, with the transfer from your airport.",airBase:"SMART BASE",airBaseText:"{p} is the most central stop on this list, about {d} from {a}. A good place to sleep while you explore the rest.",airStart:"Closest to the airport — a gentle first stop.",airAll:"ALL PLACES FROM {a}",airDir:"Directions from airport",airFar:"Far from this airport — consider a domestic flight or train.",airTips:"FREE ARRIVAL TIPS",airTip1:"Use the official taxi desk or a ride app — avoid unofficial offers.",airTip2:"Download offline maps and save your hotel address before landing.",airTip3:"Check visa and entry rules for your passport before booking.",airTip4:"Look for the free tourist-information desk and free airport Wi‑Fi.",airTip5:"Compare an eSIM or local SIM with roaming before you leave.",airAdvice:"Distances are straight-line estimates with a road factor. Always check your government's travel advice and live flight times.",airRoute:"Your route starts at {a} and follows the shortest path between places.",minW:"min",hW:"h",nearestAir:"Nearest airport",phHello:"Hello",phThanks:"Thank you",phPlease:"Please",phHowMuch:"How much?",phEnglish:"Do you speak English?"},
+fr:{tAir:"✈ Y aller",flyInto:"ATTERRIR À",airPlan:"Préparer l'arrivée",airLoading:"Recherche des aéroports…",airYour:"VOTRE AÉROPORT D'ARRIVÉE",airOpenMap:"Aéroport sur la carte",airFlights:"Chercher des vols",airFrom:"de",byRoad:"par la route",airStyle:"QU'AIMEZ-VOUS ?",s_culture:"Histoire & culture",s_nature:"Nature",s_beach:"Plages & mer",s_city:"Vie urbaine",s_food:"Cuisine & marchés",s_relax:"Détente",airPicks:"LES MEILLEURS LIEUX POUR VOUS",airPicksFirst:"De belles premières étapes, classées selon l'intérêt et la distance depuis l'aéroport.",airPicksStyle:"Choisis selon vos goûts, avec le trajet depuis l'aéroport.",airBase:"BASE IDÉALE",airBaseText:"{p} est l'étape la plus centrale, à environ {d} de {a}. Un bon endroit pour dormir pendant l'exploration.",airStart:"Le plus proche de l'aéroport — une première étape tranquille.",airAll:"TOUS LES LIEUX DEPUIS {a}",airDir:"Itinéraire depuis l'aéroport",airFar:"Loin de cet aéroport — pensez à un vol intérieur ou au train.",airTips:"CONSEILS D'ARRIVÉE GRATUITS",airTip1:"Utilisez le comptoir de taxis officiel ou une appli VTC.",airTip2:"Téléchargez des cartes hors ligne et notez l'adresse de l'hôtel avant d'atterrir.",airTip3:"Vérifiez les règles de visa pour votre passeport avant de réserver.",airTip4:"Repérez le point d'information touristique gratuit et le Wi‑Fi gratuit.",airTip5:"Comparez eSIM ou SIM locale et itinérance avant le départ.",airAdvice:"Les distances sont des estimations à vol d'oiseau avec un coefficient routier. Vérifiez les conseils aux voyageurs et les horaires de vol.",airRoute:"Votre parcours part de {a} et suit le chemin le plus court entre les lieux.",minW:"min",hW:"h",nearestAir:"Aéroport le plus proche",phHello:"Bonjour",phThanks:"Merci",phPlease:"S'il vous plaît",phHowMuch:"Combien ?",phEnglish:"Parlez-vous anglais ?"},
+ar:{tAir:"✈ كيف تصل",flyInto:"اهبط في",airPlan:"خطط لوصولك",airLoading:"جارٍ البحث عن المطارات…",airYour:"مطار وصولك",airOpenMap:"المطار على الخريطة",airFlights:"ابحث عن رحلات",airFrom:"من",byRoad:"بالسيارة",airStyle:"ماذا تحب؟",s_culture:"التاريخ والثقافة",s_nature:"الطبيعة",s_beach:"الشواطئ والبحر",s_city:"حياة المدينة",s_food:"الطعام والأسواق",s_relax:"الاسترخاء",airPicks:"أفضل الأماكن لك",airPicksFirst:"محطات أولى رائعة مرتبة حسب الاهتمام والقرب من المطار.",airPicksStyle:"مختارة حسب ما تحب مع مدة الانتقال من المطار.",airBase:"أفضل مكان للإقامة",airBaseText:"{p} هو الأكثر مركزية بين الأماكن، على بعد {d} تقريباً من {a}. مكان جيد للمبيت أثناء الاستكشاف.",airStart:"الأقرب إلى المطار — بداية هادئة.",airAll:"كل الأماكن من {a}",airDir:"الاتجاهات من المطار",airFar:"بعيد عن هذا المطار — فكّر في رحلة داخلية أو قطار.",airTips:"نصائح مجانية للوصول",airTip1:"استخدم مكتب سيارات الأجرة الرسمي أو تطبيق نقل.",airTip2:"حمّل الخرائط دون اتصال واحفظ عنوان الفندق قبل الهبوط.",airTip3:"تحقق من شروط التأشيرة لجواز سفرك قبل الحجز.",airTip4:"ابحث عن مكتب المعلومات السياحية المجاني وشبكة الواي فاي المجانية.",airTip5:"قارن بين شريحة eSIM أو شريحة محلية والتجوال.",airAdvice:"المسافات تقديرية بخط مستقيم مع معامل للطرق. راجع نصائح السفر الرسمية ومواعيد الرحلات.",airRoute:"تبدأ رحلتك من {a} وتتبع أقصر مسار بين الأماكن.",minW:"د",hW:"س",nearestAir:"أقرب مطار",phHello:"مرحباً",phThanks:"شكراً",phPlease:"من فضلك",phHowMuch:"بكم؟",phEnglish:"هل تتحدث الإنجليزية؟"},
+es:{tAir:"✈ Cómo llegar",flyInto:"VUELA A",airPlan:"Planifica tu llegada",airLoading:"Buscando aeropuertos…",airYour:"TU AEROPUERTO DE LLEGADA",airOpenMap:"Aeropuerto en el mapa",airFlights:"Buscar vuelos",airFrom:"desde",byRoad:"por carretera",airStyle:"¿QUÉ TE GUSTA?",s_culture:"Historia y cultura",s_nature:"Naturaleza",s_beach:"Playas y mar",s_city:"Vida urbana",s_food:"Comida y mercados",s_relax:"Relax",airPicks:"LOS MEJORES LUGARES PARA TI",airPicksFirst:"Buenas primeras paradas, ordenadas por interés y distancia al aeropuerto.",airPicksStyle:"Elegidos según tus gustos, con el traslado desde el aeropuerto.",airBase:"BASE IDEAL",airBaseText:"{p} es la parada más céntrica, a unos {d} de {a}. Un buen lugar para dormir mientras exploras.",airStart:"El más cercano al aeropuerto — una primera parada tranquila.",airAll:"TODOS LOS LUGARES DESDE {a}",airDir:"Cómo llegar desde el aeropuerto",airFar:"Lejos de este aeropuerto — valora un vuelo interno o tren.",airTips:"CONSEJOS GRATUITOS DE LLEGADA",airTip1:"Usa el mostrador oficial de taxis o una app de transporte.",airTip2:"Descarga mapas sin conexión y guarda la dirección del hotel antes de aterrizar.",airTip3:"Revisa los requisitos de visado de tu pasaporte antes de reservar.",airTip4:"Busca la oficina de turismo gratuita y el wifi gratuito.",airTip5:"Compara eSIM o SIM local con el roaming antes de viajar.",airAdvice:"Las distancias son estimaciones en línea recta con un factor de carretera. Consulta las recomendaciones oficiales y los horarios.",airRoute:"Tu ruta empieza en {a} y sigue el camino más corto entre lugares.",minW:"min",hW:"h",nearestAir:"Aeropuerto más cercano",phHello:"Hola",phThanks:"Gracias",phPlease:"Por favor",phHowMuch:"¿Cuánto cuesta?",phEnglish:"¿Habla inglés?"},
+de:{tAir:"✈ Anreise",flyInto:"LANDE IN",airPlan:"Ankunft planen",airLoading:"Flughäfen werden gesucht…",airYour:"DEIN ANKUNFTSFLUGHAFEN",airOpenMap:"Flughafen auf der Karte",airFlights:"Flüge suchen",airFrom:"von",byRoad:"mit dem Auto",airStyle:"WAS GEFÄLLT DIR?",s_culture:"Geschichte & Kultur",s_nature:"Natur",s_beach:"Strand & Meer",s_city:"Stadtleben",s_food:"Essen & Märkte",s_relax:"Entspannung",airPicks:"DIE BESTEN ORTE FÜR DICH",airPicksFirst:"Gute erste Stopps, sortiert nach Interesse und Entfernung vom Flughafen.",airPicksStyle:"Passend zu deinen Vorlieben, mit Transfer vom Flughafen.",airBase:"IDEALE BASIS",airBaseText:"{p} ist der zentralste Stopp, etwa {d} von {a} entfernt. Ein guter Ort zum Übernachten.",airStart:"Am nächsten zum Flughafen — ein ruhiger erster Stopp.",airAll:"ALLE ORTE AB {a}",airDir:"Route vom Flughafen",airFar:"Weit vom Flughafen — erwäge einen Inlandsflug oder Zug.",airTips:"KOSTENLOSE ANKUNFTSTIPPS",airTip1:"Nutze den offiziellen Taxistand oder eine Fahrdienst-App.",airTip2:"Lade Offline-Karten und speichere die Hoteladresse vor der Landung.",airTip3:"Prüfe vor der Buchung die Visabestimmungen für deinen Pass.",airTip4:"Suche die kostenlose Touristeninformation und das kostenlose WLAN.",airTip5:"Vergleiche eSIM oder lokale SIM mit Roaming.",airAdvice:"Entfernungen sind Luftlinien-Schätzungen mit Straßenfaktor. Prüfe offizielle Reisehinweise und Flugzeiten.",airRoute:"Deine Route beginnt in {a} und folgt dem kürzesten Weg zwischen den Orten.",minW:"Min.",hW:"Std.",nearestAir:"Nächster Flughafen",phHello:"Hallo",phThanks:"Danke",phPlease:"Bitte",phHowMuch:"Wie viel kostet das?",phEnglish:"Sprechen Sie Englisch?"},
+it:{tAir:"✈ Come arrivare",flyInto:"ATTERRA A",airPlan:"Pianifica l'arrivo",airLoading:"Ricerca aeroporti…",airYour:"IL TUO AEROPORTO DI ARRIVO",airOpenMap:"Aeroporto sulla mappa",airFlights:"Cerca voli",airFrom:"da",byRoad:"in auto",airStyle:"COSA TI PIACE?",s_culture:"Storia e cultura",s_nature:"Natura",s_beach:"Spiagge e mare",s_city:"Vita di città",s_food:"Cibo e mercati",s_relax:"Relax",airPicks:"I LUOGHI MIGLIORI PER TE",airPicksFirst:"Ottime prime tappe, ordinate per interesse e distanza dall'aeroporto.",airPicksStyle:"Scelti in base ai tuoi gusti, con il trasferimento dall'aeroporto.",airBase:"BASE IDEALE",airBaseText:"{p} è la tappa più centrale, a circa {d} da {a}. Un buon posto dove dormire mentre esplori.",airStart:"Il più vicino all'aeroporto — una prima tappa tranquilla.",airAll:"TUTTI I LUOGHI DA {a}",airDir:"Indicazioni dall'aeroporto",airFar:"Lontano da questo aeroporto — valuta un volo interno o il treno.",airTips:"CONSIGLI GRATUITI PER L'ARRIVO",airTip1:"Usa il banco taxi ufficiale o un'app di trasporto.",airTip2:"Scarica mappe offline e salva l'indirizzo dell'hotel prima di atterrare.",airTip3:"Controlla le regole sul visto per il tuo passaporto prima di prenotare.",airTip4:"Cerca l'ufficio turistico gratuito e il wifi gratuito.",airTip5:"Confronta eSIM o SIM locale con il roaming.",airAdvice:"Le distanze sono stime in linea d'aria con un fattore stradale. Controlla le avvertenze ufficiali e gli orari dei voli.",airRoute:"Il tuo percorso parte da {a} e segue la strada più breve tra i luoghi.",minW:"min",hW:"h",nearestAir:"Aeroporto più vicino",phHello:"Ciao",phThanks:"Grazie",phPlease:"Per favore",phHowMuch:"Quanto costa?",phEnglish:"Parla inglese?"}
+};
+for(const l in AIR_T)Object.assign(translations[l],AIR_T[l]);
+const tf=(k,v)=>t(k).replace(/\{(\w+)\}/g,(m,x)=>v[x]!=null?v[x]:m);
+const STYLES={
+  culture:/histor|heritage|ancient|museum|temple|palace|medina|cathedral|castle|ruin|mosque|church|monument|unesco|archaeolog|old town|fort\b|tradition|art\b|roman|mausoleum|shrine|medieval/g,
+  nature:/nature|national park|mountain|lake|waterfall|forest|desert|canyon|volcano|hike|trek|valley|falls|glacier|safari|wildlife|reserve|gorge|alps|peak|oasis|cave|river/g,
+  beach:/beach|island|coast|bay\b|sea\b|seaside|riviera|coral|lagoon|reef|resort|shore|snorkel|dive|cove|marina|harbou?r/g,
+  city:/city|capital|urban|skyline|modern|shopping|nightlife|district|square|tower|neon|downtown|boulevard|metropolis/g,
+  food:/food|market|cuisine|souk|café|cafe|restaurant|street food|wine|bazaar|culinary|taste/g,
+  relax:/spa\b|relax|garden|peaceful|quiet|calm|thermal|hot spring|serene|retreat|park\b|village|countryside|lake|beach/g
+};
+const STYLE_ICON={culture:"🏛️",nature:"🌿",beach:"🏖️",city:"🌆",food:"🍜",relax:"🧘"};
+const distKm=(a,b)=>{const r=Math.PI/180,dl=(b.lat-a.lat)*r,dg=(b.lng-a.lng)*r,x=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dg/2)**2;return 12742*Math.asin(Math.sqrt(x))};
+const fmtKm=d=>(d<10?d.toFixed(1):Math.round(d).toLocaleString(lang))+" km";
+const roadMin=d=>Math.max(5,Math.round(d*1.35/(d<40?35:d<200?60:75)*60));
+const fmtTime=m=>m<60?`~${m} ${t("minW")}`:`~${Math.floor(m/60)} ${t("hW")} ${pad(m%60)}`;
+const hasPt=p=>p&&p.lat!=null&&p.lng!=null;
+function airportsFor(code){
+  let l=AIR_BY_CC[code];if(l&&l.length)return l;
+  const c=S.facts&&S.facts.latlng;if(!c)return[];
+  const p={lat:c[0],lng:c[1]};return[...AIRPORTS].sort((a,b)=>distKm(p,a)-distKm(p,b)).slice(0,3);
+}
+function curAir(){const l=airportsFor(S.code);if(!l.length)return null;return(GS.air&&l.find(a=>a.iata===GS.air))||l[0]}
+function nearestAirport(p){const l=airportsFor(S.code);if(!l.length||!hasPt(p))return null;let best=null;l.forEach(a=>{const d=distKm(a,p);if(!best||d<best.d)best={a,d}});return best}
+function orderedPool(pool){
+  const a=curAir(),pts=pool.filter(hasPt),rest=pool.filter(p=>!hasPt(p));GS.ordered=false;
+  if(!a||pts.length<3)return pool;
+  const out=[];let cur={lat:a.lat,lng:a.lng};const left=[...pts];
+  while(left.length){let bi=0,bd=Infinity;left.forEach((p,i)=>{const d=distKm(cur,p);if(d<bd){bd=d;bi=i}});cur=left.splice(bi,1)[0];out.push(cur)}
+  GS.ordered=true;return[...out,...rest];
+}
+const airNote=()=>GS.ordered&&curAir()?`<p class="air-note">✈ ${esc(tf("airRoute",{a:curAir().iata}))}</p>`:"";
+function styleScore(p,keys){const s=`${p.tag||""} ${p.title||""} ${p.text||""}`.toLowerCase();const hits=[];let sc=0;keys.forEach(k=>{const n=(s.match(STYLES[k])||[]).length;if(n){sc+=Math.min(n,3);hits.push(k)}});return{sc,hits}}
+function smartPicks(a){
+  const list=(S.places||[]).filter(hasPt);if(!list.length)return[];
+  const keys=GS.styles||[];const n=list.length;
+  return list.map((p,i)=>{const d=distKm(a,p),st=styleScore(p,keys);
+    const score=(keys.length?st.sc*3:0)+(n-i)*.5-d/300;return{p,d,min:roadMin(d),hits:st.hits,score}})
+    .filter(x=>!keys.length||x.hits.length||list.length<=3).sort((x,y)=>y.score-x.score).slice(0,3);
+}
+function centralPlace(){
+  const l=(S.places||[]).filter(hasPt);if(l.length<3)return null;
+  let best=null;l.forEach(p=>{const s=l.reduce((u,q)=>u+distKm(p,q),0);if(!best||s<best.s)best={p,s}});return best.p;
+}
+const dirUrl=(a,p,country)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(a.name+" Airport")}&destination=${encodeURIComponent(hasPt(p)?p.lat+","+p.lng:p.title+", "+country)}&travelmode=driving`;
+function tabAir(){
+  const list=airportsFor(S.code);
+  if(!list.length)return`<p class="g-empty">${t("airLoading")}</p>`;
+  const a=curAir(),country=enBase(S.code).replace(/\s*\(.*\)/,"");
+  const chips=list.slice(0,8).map(x=>`<button type="button" class="air-chip-btn" data-air="${x.iata}" aria-pressed="${x.iata===a.iata}"><b>${x.iata}</b><span>${esc(x.name)}</span></button>`).join("");
+  const maps=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.name+" Airport")}`;
+  const fl=`https://www.google.com/travel/flights?q=${encodeURIComponent("Flights to "+a.iata)}`;
+  const styles=Object.keys(STYLES).map(k=>`<button type="button" class="style-chip" data-style="${k}" aria-pressed="${(GS.styles||[]).includes(k)}">${STYLE_ICON[k]} ${t("s_"+k)}</button>`).join("");
+  const picks=smartPicks(a),located=(S.places||[]).filter(hasPt);
+  const pickHtml=picks.length?`<div class="pick-grid">${picks.map((x,i)=>`<a class="pick" style="--i:${i}" href="${dirUrl(a,x.p,country)}" target="_blank" rel="noopener"><span class="must-n">${pad(i+1)}</span><h4>${esc(x.p.title)}</h4><p>${esc(short(x.p.text||"",110))}</p><div class="pick-meta"><span>✈ ${a.iata} · ${fmtKm(x.d)}</span><span>🚗 ${fmtTime(x.min)}</span></div>${x.hits.length?`<div class="pick-why">${x.hits.map(h=>STYLE_ICON[h]+" "+t("s_"+h)).join(" · ")}</div>`:""}${x.d>300?`<div class="pick-warn">${t("airFar")}${(()=>{const n=nearestAirport(x.p);return n&&n.a.iata!==a.iata?` ✈ ${n.a.iata} · ${fmtKm(n.d)}`:""})()}</div>`:""}<em class="maps-link">${t("airDir")} ↗</em></a>`).join("")}</div>`:`<p class="g-empty">${t("airLoading")}</p>`;
+  const central=centralPlace(),close=located.length?[...located].sort((p,q)=>distKm(a,p)-distKm(a,q))[0]:null;
+  const base=central?`<div class="air-base"><span class="panel-kicker">📍 ${t("airBase")}</span><p>${esc(tf("airBaseText",{p:central.title,d:fmtKm(distKm(a,central)),a:a.iata}))}</p>${close?`<p class="air-base-sub">${esc(close.title)} — ${t("airStart")}</p>`:""}</div>`:"";
+  const rows=located.length?`<div class="air-table"><span class="panel-kicker">${esc(tf("airAll",{a:a.iata}))}</span>${[...located].sort((p,q)=>distKm(a,p)-distKm(a,q)).map(p=>{const d=distKm(a,p);return`<a href="${dirUrl(a,p,country)}" target="_blank" rel="noopener"><b>${esc(p.title)}</b><span>${fmtKm(d)}</span><span>${fmtTime(roadMin(d))}</span><i>↗</i></a>`}).join("")}</div>`:"";
+  return`<div class="air-hero"><div class="air-code" aria-hidden="true">${a.iata}</div><div class="air-hero-body"><span class="panel-kicker">${t("airYour")}</span><h3>${esc(a.name)}</h3><div class="air-actions"><a class="btn btn-primary" href="${fl}" target="_blank" rel="noopener">${t("airFlights")} <b>↗</b></a><a class="btn btn-ghost" href="${maps}" target="_blank" rel="noopener">${t("airOpenMap")} <b>↗</b></a></div></div></div>
+  <div class="air-chips" role="group" aria-label="${esc(t("flyInto"))}">${chips}</div>
+  <div class="air-sub"><span class="panel-kicker">${t("airStyle")}</span><div class="style-chips">${styles}</div></div>
+  <div class="air-sub"><span class="panel-kicker">${t("airPicks")}</span><p class="air-lead">${t((GS.styles||[]).length?"airPicksStyle":"airPicksFirst")}</p>${pickHtml}</div>
+  ${base}${rows}
+  <div class="air-sub"><span class="panel-kicker">${t("airTips")}</span><ul class="air-tips">${[1,2,3,4,5].map(i=>`<li>${t("airTip"+i)}</li>`).join("")}</ul><p class="air-advice">${t("airAdvice")}</p></div>`;
+}
+/* chips on the destination cards + airport strip in Explore */
+function decoratePlaces(){
+  (S.places||[]).forEach((p,i)=>{const card=$("#place-"+i);if(!card||!hasPt(p))return;const n=nearestAirport(p);if(!n)return;
+    const txt=`✈ ${n.a.iata} · ${fmtKm(n.d)}`;let chip=$(".air-chip",card);
+    if(!chip){chip=document.createElement("span");chip.className="air-chip";const info=$(".destination-info",card),ml=$(".maps-link",card);if(!info)return;info.insertBefore(chip,ml)}
+    if(chip.textContent!==txt){chip.textContent=txt;chip.title=`${t("nearestAir")}: ${n.a.name}`}});
+}
+let airStripKey="";
+function renderAirStrip(){
+  const box=$("#airStrip");if(!box)return;const l=airportsFor(S.code).slice(0,4);
+  const html=l.length?`<span class="panel-kicker">✈ ${t("flyInto")}</span><div class="air-strip-list">${l.map(a=>`<button type="button" class="air-pill" data-air-go="${a.iata}"><b>${a.iata}</b><span>${esc(a.name)}</span></button>`).join("")}</div><button type="button" class="air-strip-more" data-air-go="${l[0].iata}">${t("airPlan")} →</button>`:"";
+  const key=S.code+lang+html;if(key===airStripKey)return;airStripKey=key;box.innerHTML=html;box.classList.toggle("on",!!l.length);
+}
+function repaintFresh(){GS.fresh=true;paintGuide();GS.fresh=false}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-air-go]");if(!b)return;e.preventDefault();GS.air=b.dataset.airGo;GS.tab="air";repaintFresh();$("#guide").scrollIntoView({behavior:"smooth"})});
+$("#guideBody").addEventListener("click",e=>{
+  const ab=e.target.closest("[data-air]");if(ab){GS.air=ab.dataset.air;repaintFresh();return}
+  const sb=e.target.closest("[data-style]");if(sb){const k=sb.dataset.style,s=new Set(GS.styles||[]);s.has(k)?s.delete(k):s.add(k);GS.styles=[...s];repaintFresh()}
+});
+$("#guideBody").addEventListener("keydown",e=>{
+  const tb=e.target.closest("[data-tab]");if(!tb||!["ArrowRight","ArrowLeft","Home","End"].includes(e.key))return;
+  const tabs=$$("[data-tab]",$("#guideBody")),i=tabs.indexOf(tb),rtl=document.documentElement.dir==="rtl";
+  let n=i;if(e.key==="Home")n=0;else if(e.key==="End")n=tabs.length-1;else n=(i+((e.key==="ArrowRight")!==rtl?1:-1)+tabs.length)%tabs.length;
+  e.preventDefault();GS.tab=tabs[n].dataset.tab;repaintFresh();const nt=$(`[data-tab="${GS.tab}"]`,$("#guideBody"));if(nt)nt.focus();
+});
+
+/* ================= DISCOVER v5 — flight arcs on the globe, cinematic country wipe, interactive trip map ================= */
+const MAP_T={
+en:{tMap:"🗺 Trip map",mapHint:"Tap a stop for details. The plane follows your route from the airport.",mapNone:"Locating places… the map appears as soon as coordinates load."},
+fr:{tMap:"🗺 Carte du voyage",mapHint:"Touchez une étape pour les détails. L'avion suit votre route depuis l'aéroport.",mapNone:"Localisation des lieux…"},
+ar:{tMap:"🗺 خريطة الرحلة",mapHint:"اضغط على محطة لعرض التفاصيل. تتبع الطائرة مسارك من المطار.",mapNone:"جارٍ تحديد الأماكن…"},
+es:{tMap:"🗺 Mapa del viaje",mapHint:"Toca una parada para ver detalles. El avión sigue tu ruta desde el aeropuerto.",mapNone:"Localizando lugares…"},
+de:{tMap:"🗺 Reisekarte",mapHint:"Tippe auf einen Stopp für Details. Das Flugzeug folgt deiner Route ab Flughafen.",mapNone:"Orte werden gesucht…"},
+it:{tMap:"🗺 Mappa del viaggio",mapHint:"Tocca una tappa per i dettagli. L'aereo segue il tuo percorso dall'aeroporto.",mapNone:"Localizzazione dei luoghi…"}
+};
+for(const l in MAP_T)Object.assign(translations[l],MAP_T[l]);
+
+/* ---- 1. interactive trip map (pure SVG, works offline) ---- */
+function mapPts(){const a=curAir(),out=[];buildItinerary(GS.days).forEach((d,i)=>d.forEach(x=>{const p=(S.places||[]).find(q=>q.title===x.title);if(p&&hasPt(p)&&!out.some(o=>o.p===p))out.push({p,day:i+1})}));return{a,out}}
+function mapInfo(o,a){const d=distKm(a,o.p),c=enBase(S.code).replace(/\s*\(.*\)/,"");
+  return`<span class="mi-day">${t("dayWord")} ${o.day}</span><b>${esc(o.p.title)}</b><span class="mi-meta">✈ ${a.iata} · ${fmtKm(d)} · 🚗 ${fmtTime(roadMin(d))}</span><p>${esc(short(o.p.text||"",160))}</p><a href="${dirUrl(a,o.p,c)}" target="_blank" rel="noopener">${t("airDir")} ↗</a>`}
+function tabMap(){
+  const{a,out}=mapPts();if(!a||!out.length)return`<p class="g-empty">${t("mapNone")}</p>`;
+  const W=800,H=460,P=76,all=[a,...out.map(o=>o.p)],lats=all.map(p=>p.lat),lngs=all.map(p=>p.lng);
+  const k=Math.cos((Math.min(...lats)+Math.max(...lats))/2*Math.PI/180),minX=Math.min(...lngs)*k,maxX=Math.max(...lngs)*k,minY=Math.min(...lats),maxY=Math.max(...lats);
+  const dx=Math.max(maxX-minX,.05),dy=Math.max(maxY-minY,.05),sc=Math.min((W-2*P)/dx,(H-2*P)/dy),ox=(W-dx*sc)/2,oy=(H-dy*sc)/2;
+  const pt=p=>({x:+(ox+(p.lng*k-minX)*sc).toFixed(1),y:+(oy+(maxY-p.lat)*sc).toFixed(1)});
+  const A=pt(a),Q=out.map(o=>pt(o.p)),path=[A,...Q].map((q,i)=>(i?"L":"M")+q.x+" "+q.y).join(" ");
+  const grid=[...Array(9)].map((_,i)=>`<path d="M${i*100} 0V${H}"/>`).join("")+[...Array(5)].map((_,i)=>`<path d="M0 ${i*115}H${W}"/>`).join("");
+  const marks=out.map((o,i)=>`<g class="mk${i?"":" active"}" data-mk="${i}" tabindex="0" role="button" aria-label="${esc(o.p.title)}" transform="translate(${Q[i].x} ${Q[i].y})" style="--d:${.5+i*.25}s"><circle class="mk-pulse" r="15"/><circle class="mk-dot" r="13"/><text class="mk-n" y="4">${o.day}</text><text class="mk-t" y="-21">${esc(short(o.p.title,22))}</text></g>`).join("");
+  return`<p class="air-lead">${t("mapHint")}</p><div class="tmap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t("tMap"))}"><g class="tm-grid">${grid}</g><path class="tm-route" d="${path}" pathLength="1"/><g class="mk-air" transform="translate(${A.x} ${A.y})"><circle r="17"/><text y="5">✈</text><text class="mk-t" y="-24">${a.iata}</text></g>${marks}<path class="tm-plane" d="M-9,-6L11,0L-9,6L-5,0Z"><animateMotion dur="${Math.max(6,out.length*2.2)}s" repeatCount="indefinite" rotate="auto" path="${path}"/></path></svg></div><div class="map-info" id="mapInfo">${mapInfo(out[0],a)}</div>`;
+}
+function pickMarker(i){const{a,out}=mapPts();if(!out[i])return;$$(".mk").forEach(m=>m.classList.toggle("active",+m.dataset.mk===i));const b=$("#mapInfo");if(b){b.classList.remove("in");void b.offsetWidth;b.innerHTML=mapInfo(out[i],a);b.classList.add("in")}}
+$("#guideBody").addEventListener("click",e=>{const m=e.target.closest("[data-mk]");if(m)pickMarker(+m.dataset.mk);const ab=e.target.closest("[data-air]");if(ab&&globe){const a=curAir();if(a)globe.pointOfView({lat:a.lat,lng:a.lng,altitude:.9},1300)}});
+$("#guideBody").addEventListener("keydown",e=>{const m=e.target.closest("[data-mk]");if(m&&(e.key==="Enter"||e.key===" ")){e.preventDefault();pickMarker(+m.dataset.mk)}});
+
+/* ---- 2. flight arcs + airport marker on the globe ---- */
+let flightKey="";
+function syncFlights(){
+  if(!globe)return;const a=curAir(),pts=(S.places||[]).filter(hasPt),key=a?a.iata+"|"+pts.map(p=>p.title).join("|"):"";
+  if(key===flightKey)return;flightKey=key;
+  if(!a||!pts.length){globe.arcsData([]).htmlElementsData([]);return}
+  try{globe.arcsData(pts.map(p=>({startLat:a.lat,startLng:a.lng,endLat:p.lat,endLng:p.lng}))).arcColor(()=>["#ffd98a","#86cbb8"]).arcStroke(.45).arcDashLength(.45).arcDashGap(.22).arcDashAnimateTime(2400).arcAltitudeAutoScale(.4)
+  .htmlElementsData([a]).htmlLat(d=>d.lat).htmlLng(d=>d.lng).htmlElement(d=>{const el=document.createElement("div");el.className="globe-airport";el.innerHTML=`<i>✈</i><b>${esc(d.iata)}</b>`;return el})}catch(e){}
+}
+setInterval(syncFlights,1500);
+
+/* ---- 3. cinematic country transition ---- */
+const wipe=document.createElement("div");wipe.id="cineWipe";wipe.setAttribute("aria-hidden","true");wipe.innerHTML='<div class="cw-inner"><span class="cw-flag"></span><b class="cw-name"></b><small class="cw-sub"></small></div>';document.body.appendChild(wipe);
+let wipeTimer;
+function cineWipe(code){
+  if(reduced())return;clearTimeout(wipeTimer);
+  $(".cw-flag",wipe).innerHTML=flagImg(code,"lg");$(".cw-name",wipe).textContent=nm(code);$(".cw-sub",wipe).textContent="DISCOVER / "+pad(INDEX_OF[code]+1,3);
+  wipe.className="";void wipe.offsetWidth;wipe.className="go";wipeTimer=setTimeout(()=>{wipe.className=""},1500);
+}
+const _setCountry=setCountry;
+setCountry=function(code,opts={}){const ch=BY_CODE[code]&&code!==S.code&&!opts.silent;const r=_setCountry(code,opts);if(ch)cineWipe(code);return r};
+const _flyTo=flyTo;
+flyTo=function(code){if(globe&&!reduced()){globe.pointOfView({altitude:2.9},550);setTimeout(()=>_flyTo(code),520)}else _flyTo(code)};
+
 /* ================= DISCOVER v3 — moments (feed, stories, composer) ================= */
 let feedFilter="latest";
 const SAMPLE_POSTS=[
@@ -823,6 +1595,7 @@ if(document.readyState==="complete")setTimeout(hideLoader,350);else{addEventList
   const closeIntro=()=>{if(closed)return;closed=true;clearTimeout(fallbackTimer);shell.classList.add("is-leaving");document.body.classList.remove("intro-playing");try{film.pause()}catch(e){}setTimeout(()=>shell.remove(),1150)};
   skip.addEventListener("click",e=>{e.stopPropagation();closeIntro()},{once:true});
   shell.addEventListener("click",e=>{if(e.target.closest("a,button"))return;closeIntro()});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")closeIntro()});
   shell.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();closeIntro()}});
   film.addEventListener("playing",()=>{shell.classList.add("is-playing");film.muted=true;film.defaultMuted=true;film.playsInline=true});
   film.addEventListener("ended",closeIntro,{once:true});film.addEventListener("error",closeIntro,{once:true});

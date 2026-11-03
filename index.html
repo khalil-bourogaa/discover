@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#080d16">
+  <meta name="theme-color" content="#080d16"><meta name="color-scheme" content="dark">
   <title>DISCOVER — See the world differently</title>
   <meta name="description" content="Explore all 195 countries on a realistic 3D globe, get a visitor guide for each one, share moments and keep a page-turning travel book.">
   <meta property="og:title" content="DISCOVER — See the world differently">
@@ -77,6 +77,7 @@
       <div class="section-heading reveal"><div><div class="overline"><span></span><span data-i18n="discoverMore">GO DEEPER</span></div><h2><span data-i18n="exploreTitle">Explore every</span> <em data-i18n="exploreEm">corner.</em></h2></div><p data-i18n="exploreText">From iconic landmarks to quiet hidden places, find the details that make each destination unique.</p></div>
       <div class="country-banner" id="countryBanner"><div class="banner-bg"></div><div class="banner-copy"><span id="bannerEyebrow">COUNTRY GUIDE</span><h3 id="bannerTitle">Tunisia</h3><p id="bannerDescription"></p></div><div class="banner-index">DISCOVER / <span id="bannerNumber">001</span></div></div>
       <div class="country-facts" id="countryFacts"></div>
+      <div class="air-strip" id="airStrip" aria-live="polite"></div>
       <div class="subheading"><div><span class="panel-kicker" data-i18n="regionsCities">REGIONS & CITIES</span><h3 data-i18n="placesWorth">Places worth the journey</h3></div><span class="subtle" id="placeCount">06 PLACES</span></div>
       <div class="destination-grid" id="destinationGrid"></div>
       <div id="foodBlock"><div class="subheading food-heading"><div><span class="panel-kicker" data-i18n="tasteCulture">TASTE THE CULTURE</span><h3 data-i18n="localFlavours">Local flavours</h3></div></div><div class="food-grid" id="foodGrid"></div></div>
@@ -111,5 +112,6 @@
   <div class="story-view" id="storyView" aria-hidden="true" role="dialog" aria-modal="true"><div class="sv-stage" id="svStage"><div class="sv-img" id="svImg"></div><div class="sv-shade"></div><div class="sv-bars" id="svBars"></div><div class="sv-top"><span class="sv-who" id="svWho"></span><button type="button" class="sv-close" data-close="story" aria-label="Close">×</button></div><div class="sv-bottom"><h3 id="svTitle"></h3><p id="svCap"></p><button type="button" class="btn btn-primary" id="svGo"><span data-i18n="exploreCountry">Explore</span> <b>↗</b></button></div></div></div>
   <canvas id="confetti" aria-hidden="true"></canvas>
   <button type="button" id="toTop" aria-label="Back to top">↑</button>
+  <noscript><p style="position:fixed;inset:auto 0 0 0;padding:14px;background:#d9b47b;color:#111;text-align:center;z-index:999">DISCOVER needs JavaScript to run.</p></noscript>
   <script src="script.js"></script>
 </body></html>
