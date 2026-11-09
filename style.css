@@ -423,10 +423,10 @@ body:before{background:radial-gradient(ellipse at 12% 18%,var(--country-glow,rgb
 .bookshell{perspective:3200px;touch-action:pan-y;cursor:grab}
 .bookshell:active{cursor:grabbing}
 .book3d{transform-style:preserve-3d;will-change:transform}
-.leaf{backface-visibility:visible;transition:transform 1.05s cubic-bezier(.22,.72,.16,1),filter 1.05s ease;will-change:transform}
+.leaf{backface-visibility:visible;transition:transform 0.95s cubic-bezier(0.25, 1, 0.5, 1),filter 0.95s ease;will-change:transform}
 .leaf.flipped{filter:drop-shadow(-10px 4px 9px #0004)}
 .leaf.turning{filter:drop-shadow(0 8px 12px #0008)}
-.leaf.turning .face.front:after,.leaf.turning .face.back:after{background:linear-gradient(90deg,rgba(48,31,15,.45),rgba(48,31,15,.08) 15%,transparent 38%,rgba(255,255,255,.18) 49%,transparent 65%);animation:paperCurl 1.05s ease both}
+.leaf.turning .face.front:after,.leaf.turning .face.back:after{background:linear-gradient(90deg,rgba(48,31,15,.45),rgba(48,31,15,.08) 15%,transparent 38%,rgba(255,255,255,.18) 49%,transparent 65%);animation:paperCurl 0.95s cubic-bezier(0.25, 1, 0.5, 1) both}
 @keyframes paperCurl{0%{opacity:.1;transform:translateX(-12%)}45%{opacity:1;transform:translateX(0)}100%{opacity:.12;transform:translateX(12%)}}
 @media(max-width:700px){.bookshell{cursor:default}.leaf.single{transition:transform .82s cubic-bezier(.22,.72,.16,1),filter .82s}.leaf.single.flipped{filter:drop-shadow(-8px 5px 9px #0005)}}
 @media(prefers-reduced-motion:reduce){.cinematic-intro-tap{animation:none}.leaf,.book3d,.post-card{transition:none!important}}

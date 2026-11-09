@@ -1528,7 +1528,7 @@ function turn(dir){
   if(BK.single&&target>BK.L-1){return}
   BK.busy=true;const idx=dir>0?BK.k:BK.k-1,lf=$(`#book3d .leaf[data-i="${idx}"]`);if(!lf){BK.busy=false;return}
   lf.classList.add("turning");lf.style.zIndex=300;BK.k=target;lf.classList.toggle("flipped",dir>0);setBookState();
-  setTimeout(()=>{lf.classList.remove("turning");layoutBook();BK.busy=false},reduced()?60:800);
+  setTimeout(()=>{lf.classList.remove("turning");layoutBook();BK.busy=false},reduced()?60:950);
 }
 async function goToSpread(k){k=Math.max(0,Math.min(BK.L,k));let guard=0;while(BK.k!==k&&guard++<60){turn(BK.k<k?1:-1);await wait(reduced()?90:360)}}
 $("#bookPrev").onclick=()=>turn(-1);$("#bookNext").onclick=()=>turn(1);
